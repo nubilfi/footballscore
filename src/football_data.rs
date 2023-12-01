@@ -337,38 +337,6 @@ impl FootballData {
 
         output
     }
-
-    pub fn get_fixtures(&self) -> StringType {
-        let mut output: StringType = "Match: ".into();
-
-        let (home_goals, away_goals) = self.get_goals();
-
-        let home_team: Vec<StringType> = self.response
-            .iter()
-            .map(|resp| resp.teams.home.name.clone())
-            .collect();
-
-        let away_team: Vec<StringType> = self.response
-            .iter()
-            .map(|resp| resp.teams.away.name.clone())
-            .collect();
-
-        write!(output, "{}", home_team.first().unwrap()).unwrap_or_default();
-
-        if let Some(home_score) = home_goals.get(0).unwrap() {
-            write!(output, " {}", home_score).unwrap_or(());
-        }
-
-        output.push_str(" vs ");
-
-        if let Some(away_score) = away_goals.get(0).unwrap() {
-            write!(output, "{} ", away_score).unwrap_or(());
-        }
-
-        write!(output, "{}", away_team.first().unwrap()).unwrap_or_default();
-
-        output
-    }
 }
 
 #[cfg(test)]
