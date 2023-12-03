@@ -38,7 +38,7 @@ impl FootballOpts {
     /// Parse options from stdin, requires `Config` instance.
     /// # Errors
     ///
-    /// Returns error if call to retreive weather data fails or if write to
+    /// Returns error if call to retreive football data fails or if write to
     /// stdout fails
     pub async fn parse_opts(config: &Config) -> Result<(), Error> {
         let mut opts = Self::parse();
