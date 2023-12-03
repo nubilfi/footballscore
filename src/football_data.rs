@@ -337,7 +337,7 @@ impl FootballData {
                 write!(output, "{}", &response.teams.away.name).unwrap();
             }
         } else {
-            write!(output, "{}", "no live event.").unwrap();
+            write!(output, "{}", "no live event").unwrap();
         }
 
         output
