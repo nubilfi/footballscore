@@ -123,9 +123,9 @@ impl fmt::Display for Goals {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match (self.home, self.away) {
             (Some(home), Some(away)) => write!(f, "{} {}", home, away),
-            (Some(home), None) => write!(f, "{} N/A", home),
-            (None, Some(away)) => write!(f, "N/A {}", away),
-            (None, None) => write!(f, "N/A N/A"),
+            (Some(home), None) => write!(f, "{} ", home),
+            (None, Some(away)) => write!(f, " {}", away),
+            (None, None) => write!(f, ""),
         }
     }
 }
@@ -240,8 +240,9 @@ pub struct Paging {
 
 #[derive(Serialize, Debug, Clone, PartialEq, Eq)]
 pub enum Parameters {
-    Live(String),
-    Next(u16),
+    Live(StringType),
+    Next(StringType),
+    Team(StringType),
 }
 
 impl<'de> Deserialize<'de> for Parameters {
@@ -253,9 +254,11 @@ impl<'de> Deserialize<'de> for Parameters {
 
         if let Some(parameters) = value.get("parameters") {
             if let Some(live) = parameters.get("live").and_then(serde_json::Value::as_str) {
-                return Ok(Parameters::Live(live.to_string()));
-            } else if let Some(next) = parameters.get("next").and_then(serde_json::Value::as_i64) {
-                return Ok(Parameters::Next(next as u16));
+                return Ok(Parameters::Live(live.into()));
+            } else if let Some(next) = parameters.get("next").and_then(serde_json::Value::as_str) {
+                return Ok(Parameters::Next(next.into()));
+            } else if let Some(team) = parameters.get("team").and_then(serde_json::Value::as_str) {
+                return Ok(Parameters::Team(team.into()));
             }
         }
 
@@ -265,8 +268,8 @@ impl<'de> Deserialize<'de> for Parameters {
 
 impl Parameters {
     fn default() -> Self {
-        // `Live` variant will be available as CLI option by input user
-        Parameters::Next(1)
+        // `Live` is hardcoded to `all` and `Team` will be available as CLI option
+        Parameters::Next("1".into())
     }
 }
 
@@ -321,17 +324,17 @@ impl FootballData {
             let home_team_name = &response.teams.home.name;
 
             if let Some(home_score) = home_goals.get(0).copied() {
-                write!(output, "{} {:?}", home_team_name, home_score.unwrap()).unwrap_or_default();
+                write!(output, "{} {:?}", home_team_name, home_score.unwrap_or_default()).unwrap();
             } else {
-                write!(output, "{}", home_team_name).unwrap_or_default();
+                write!(output, "{}", home_team_name).unwrap();
             }
 
             output.push_str(" vs ");
 
             if let Some(away_score) = away_goals.get(0).copied() {
-                write!(output, "{:?} {}", away_score.unwrap(), &response.teams.away.name).unwrap_or_default();
+                write!(output, "{:?} {}", away_score.unwrap_or_default(), &response.teams.away.name).unwrap();
             } else {
-                write!(output, "{}", &response.teams.away.name).unwrap_or_default();
+                write!(output, "{}", &response.teams.away.name).unwrap();
             }
         }
 
@@ -363,14 +366,14 @@ mod tests {
 
             if let Some(home_score) = home_goals.get(0).copied() {
                 if let Some(away_score) = away_goals.get(0).copied() {
-                    info!("{}: {} {:?} vs {} {:?}", buf.len(), home_team_name, home_score, away_team_name, away_score);
+                    info!("{}: {} {:?} vs {} {:?}", buf.len(), home_team_name, home_score.unwrap_or_default(), away_team_name, away_score.unwrap_or_default());
                 } else {
-                    info!("{}: {} {:?} vs N/A {}", buf.len(), home_team_name, home_score, away_team_name);
+                    info!("{}: {} {:?} vs {}", buf.len(), home_team_name, home_score.unwrap_or_default(), away_team_name);
                 }
             } else if let Some(away_score) = away_goals.get(0).copied() {
-                info!("{}: {} N/A vs {} {:?}", buf.len(), home_team_name, away_team_name, away_score);
+                info!("{}: {} vs {} {:?}", buf.len(), home_team_name, away_team_name, away_score.unwrap_or_default());
             } else {
-                info!("{}: {} N/A vs N/A {}", buf.len(), home_team_name, away_team_name);
+                info!("{}: {} vs {}", buf.len(), home_team_name, away_team_name);
             }
         }
 
