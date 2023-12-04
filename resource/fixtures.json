@@ -1,0 +1,83 @@
+{
+  "get": "fixtures",
+  "parameters": {
+    "next": "1",
+    "team": "529"
+  },
+  "errors": [],
+  "results": 4,
+  "paging": {
+    "current": 1,
+    "total": 1
+  },
+  "response": [
+    {
+      "fixture": {
+        "id": 239625,
+        "referee": null,
+        "timezone": "UTC",
+        "date": "2020-02-06T14:00:00+00:00",
+        "timestamp": 1580997600,
+        "periods": {
+          "first": 1580997600,
+          "second": null
+        },
+        "venue": {
+          "id": 1887,
+          "name": "Stade Municipal",
+          "city": "Oued Zem"
+        },
+        "status": {
+          "long": "Halftime",
+          "short": "HT",
+          "elapsed": 45
+        }
+      },
+      "league": {
+        "id": 2,
+        "name": "UEFA Champions League",
+        "country": "Morocco",
+        "logo": "https://media-4.api-sports.io/football/leagues/2.png",
+        "flag": "https://media-4.api-sports.io/flags/gb.svg",
+        "season": 2023,
+        "round": "Regular Season - 14"
+      },
+      "teams": {
+        "home": {
+          "id": 529,
+          "name": "Barcelona",
+          "logo": "https://media-4.api-sports.io/football/teams/529.png",
+          "winner": false
+        },
+        "away": {
+          "id": 33,
+          "name": "Arsenal",
+          "logo": "https://media.api-sports.io/football/teams/33.png",
+          "winner": true
+        }
+      },
+      "goals": {
+        "home": 0,
+        "away": 1
+      },
+      "score": {
+        "halftime": {
+          "home": 0,
+          "away": 1
+        },
+        "fulltime": {
+          "home": null,
+          "away": null
+        },
+        "extratime": {
+          "home": null,
+          "away": null
+        },
+        "penalty": {
+          "home": null,
+          "away": null
+        }
+      }
+    }
+  ]
+}
