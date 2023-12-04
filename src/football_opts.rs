@@ -72,7 +72,7 @@ impl FootballOpts {
     /// Extract options from `FootballOpts` and apply to `FootballApi`
     /// # Errors
     /// Returns Error if clap help output fails
-    pub fn get_club(&self) -> Result<ClubInfo, Error> {
+    pub fn get_club(&self, default_club_id: Option<u32>) -> Result<ClubInfo, Error> {
         let club = if let Some(club_id) = &self.club_id {
             if let Some(next_match) = self.next_match {
                 ClubInfo::from_parameter(club_id.clone(), next_match, "".into())
@@ -80,10 +80,19 @@ impl FootballOpts {
                 ClubInfo::from_parameter(club_id.clone(), 0, "all".into())
             }
         } else {
-            return Err(Error::InvalidInputError(format_string!(
-                "\nERROR: You must specify the correct value\n"
-            )));
+            if self.club_id.is_none() {
+                if let Some(next_match) = self.next_match {
+                    ClubInfo::from_parameter(default_club_id.unwrap(), next_match, "".into())
+                } else {
+                    ClubInfo::from_parameter(default_club_id.unwrap(), 0, "all".into())
+                }
+            } else {
+                return Err(Error::InvalidInputError(format_string!(
+                    "\nERROR: You must specify the correct value\n"
+                )));
+            }
         };
+
         Ok(club)
     }
 
@@ -92,7 +101,7 @@ impl FootballOpts {
     /// Returns error if call to retreive football data fails
     async fn run_opts(&self, config: &Config) -> Result<Vec<StringType>, Error> {
         let api = self.get_api(config)?;
-        let club = self.get_club()?;
+        let club = self.get_club(config.club_id)?;
 
         let data = api.get_fixture_data(&club).await?;
 
