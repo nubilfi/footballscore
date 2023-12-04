@@ -1,0 +1,9 @@
+newline_style = "Unix"
+use_field_init_shorthand = true
+use_try_shorthand = true
+
+# nightly
+imports_granularity = "Crate"
+format_strings = true
+normalize_comments = true
+wrap_comments = true
