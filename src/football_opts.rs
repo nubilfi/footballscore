@@ -30,7 +30,7 @@ pub struct FootballOpts {
 
     /// Club id (optional)
     #[clap(short, long)]
-    club_id: Option<u32>,
+    club_id: Option<u16>,
 }
 
 #[cfg(feature = "cli")]
@@ -72,7 +72,7 @@ impl FootballOpts {
     /// Extract options from `FootballOpts` and apply to `FootballApi`
     /// # Errors
     /// Returns Error if clap help output fails
-    pub fn get_club(&self, default_club_id: Option<u32>) -> Result<ClubInfo, Error> {
+    pub fn get_club(&self, default_club_id: Option<u16>) -> Result<ClubInfo, Error> {
         let club = if let Some(club_id) = &self.club_id {
             if let Some(next_match) = self.next_match {
                 ClubInfo::from_parameter(club_id.clone(), next_match, "".into())

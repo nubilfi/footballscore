@@ -27,7 +27,7 @@ pub struct ConfigInner {
 
     /// Optional (default is `529 - Barcelona`)
     #[serde(default = "default_club_id")]
-    pub club_id: Option<u32>,
+    pub club_id: Option<u16>,
 }
 
 fn default_api_endpoint() -> StringType {
@@ -38,7 +38,7 @@ fn default_api_path() -> StringType {
     "fixtures".into()
 }
 
-fn default_club_id() -> Option<u32> {
+fn default_club_id() -> Option<u16> {
     Some(529)
 }
 

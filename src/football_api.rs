@@ -29,7 +29,7 @@ pub struct FootballApi {
 #[derive(Clone, Debug, PartialEq, Hash, Eq)]
 pub enum ClubInfo {
     FixtureOpts {
-        team: u32,
+        team: u16,
         next: u8,
         live: StringType,
     }
@@ -59,7 +59,7 @@ impl fmt::Display for ClubInfo {
 impl ClubInfo {
     #[inline]
     #[must_use]
-    pub fn from_parameter(team: u32, next: u8, live: StringType) -> Self {
+    pub fn from_parameter(team: u16, next: u8, live: StringType) -> Self {
         Self::FixtureOpts {
             team,
             next,
@@ -256,7 +256,7 @@ mod tests {
 
         let mut hasher0 = DefaultHasher::new();
         club_info.hash(&mut hasher0);
-        assert_eq!(hasher0.finish(), 5107599476288424662);
+        assert_eq!(hasher0.finish(), 7112614711327871795);
 
         let club = ClubInfo::from_parameter(529, 0, "all".into());
 

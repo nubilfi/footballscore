@@ -23,7 +23,7 @@ impl Default for Periods {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq, Eq)]
 pub struct Venue {
-    pub id: u32,
+    pub id: u16,
     pub name: StringType,
     pub city: StringType,
 }
@@ -34,7 +34,7 @@ pub struct Status {
     pub short: StringType,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub elapsed: Option<u32>,
+    pub elapsed: Option<u8>,
 }
 
 impl Default for Status {
@@ -71,13 +71,13 @@ pub struct League {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub flag: Option<String>,
-    pub season: u32,
+    pub season: u16,
     pub round: StringType,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq, Eq)]
 pub struct Home {
-    pub id: u32,
+    pub id: u16,
     pub name: StringType,
     pub logo: StringType,
 
@@ -87,7 +87,7 @@ pub struct Home {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq, Eq)]
 pub struct Away {
-    pub id: u32,
+    pub id: u16,
     pub name: StringType,
     pub logo: StringType,
 
@@ -227,7 +227,7 @@ pub struct FootballData {
     pub parameters: Parameters,
 
     pub errors: Vec<Option<serde_json::Value>>,
-    pub results: u16,
+    pub results: usize,
     pub paging: Paging,
     pub response: Vec<Response>,
 }
