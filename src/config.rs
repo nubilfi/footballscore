@@ -209,7 +209,7 @@ mod tests {
         remove_var("CLUB_ID");
         remove_var("API_PATH");
 
-        let config_data = include_bytes!("../config/config.env");
+        let config_data = include_bytes!("../tests/config/config.env");
         let config_file = NamedTempFile::new()?;
         let config_path = config_file.path();
 

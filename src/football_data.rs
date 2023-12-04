@@ -304,7 +304,7 @@ impl FootballData {
     /// # use std::fs::File;
     /// # fn main() -> Result<(), Error> {
     /// # let mut buf = String::new();
-    /// # let mut f = File::open("resource/fixtures.json")?;
+    /// # let mut f = File::open("tests/resource/fixtures.json")?;
     /// # f.read_to_string(&mut buf)?;
     /// let data: FootballData = serde_json::from_str(&buf)?;
     ///
@@ -354,7 +354,7 @@ mod tests {
 
     #[test]
     fn test_football_data() -> Result<(), Error> {
-        let buf = include_str!("../resource/fixtures.json");
+        let buf = include_str!("../tests/resource/fixtures.json");
         let data: FootballData = serde_json::from_str(buf)?;
 
         let buf = data.get_current_fixtures();
