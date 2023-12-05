@@ -1,5 +1,10 @@
 # footballscore
 
+[![version](https://img.shields.io/crates/v/footballscore?color=blue&logo=rust&style=flat-square)](https://crates.io/crates/footballscore)
+[![Build Status](https://github.com/nubilfi/footballscore/workflows/Rust/badge.svg?branch=master)](https://github.com/nubilfi/footballscore/actions?branch=main)
+[![Documentation](https://docs.rs/footballscore/badge.svg)](https://docs.rs/footballscore/latest/footballscore/)
+[![codecov](https://codecov.io/gh/nubilfi/footballscore/branch/master/graph/badge.svg)](https://codecov.io/gh/nubilfi/footballscore)
+
 a CLI tool to retreive football score from api-football.com. You will need to obtain an `API_KEY` by signing up at dashboard.api-football.com.
 
 Usage:
