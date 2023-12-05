@@ -1,6 +1,6 @@
 # footballscore
 
-a CLI tool to retreive football score from api-football.com. You will need to obtain an `API_KEY` by signing up at api.football.com.
+a CLI tool to retreive football score from api-football.com. You will need to obtain an `API_KEY` by signing up at dashboard.api-football.com.
 
 Usage:
 
@@ -18,7 +18,7 @@ FLAGS:
 OPTIONS:
     -k, --api-key <api-key>             Api key (optional but either this or API_KEY environemnt variable must exist)
         --next-match <next-match>       Show next match, 1 = true, 0 = false (optional)
-    -d, --club-id <club-id>             Your favorite Club ID (optional), if not specified `529 (Barcelona)` will be assumed
+    -c, --club-id <club-id>             Your favorite Club ID (optional), if not specified `529 (Barcelona)` will be assumed
 ```
 
 Output:
