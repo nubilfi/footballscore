@@ -255,7 +255,7 @@ mod tests {
 
         assert_eq!(
             &fixture.get_current_fixtures(),
-            "Match: no live event" // no live match
+            "Match: token Error: Error/Missing application key. Go to https://www.api-football.com/documentation-v3 to learn how to get your API application key.\n" // no live match
         );
 
         Ok(())

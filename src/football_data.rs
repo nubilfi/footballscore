@@ -1,5 +1,5 @@
 use serde::{Deserialize, Deserializer, Serialize};
-use std::fmt::{self, Write};
+use std::{fmt::{self, Write}, collections::HashMap};
 
 use crate::StringType;
 
@@ -166,13 +166,27 @@ pub struct Response {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(untagged)]
+pub enum FootballErrors {
+    Empty(Vec<Option<serde_json::Value>>),
+    WithMessages(HashMap<String, String>),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct FootballErrorMessage {
+    pub access: Option<String>,
+    pub token: Option<String>,
+    pub requests: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct FootballData {
     pub get: StringType,
 
     #[serde(flatten)]
     pub parameters: Parameters,
 
-    pub errors: Vec<Option<serde_json::Value>>,
+    pub errors: FootballErrors,
     pub results: usize,
     pub paging: Paging,
     pub response: Vec<Response>,
@@ -226,7 +240,7 @@ impl Default for FootballData {
         Self {
             get: "".into(),
             parameters: Parameters::default(),
-            errors: Vec::new(),
+            errors: FootballErrors::Empty(Vec::new()),
             results: 0,
             paging: Paging::default(),
             response: Vec::new(),
@@ -316,8 +330,24 @@ impl FootballData {
             write!(output, "\n\tAway team: {}", &response.teams.away.name).unwrap();
 
             output.push('\n');
+        } else if let FootballErrors::WithMessages(error_messages) = &self.errors {
+            let mut buffer = String::with_capacity(500);
+
+            let print_error = |output: &mut String, field_name: &str, error: &str| {
+                write!(output, "{} Error: {}\n", field_name, error).unwrap_or_default();
+            };
+
+            for field_name in &["access", "token", "requests"] {
+                if let Some(error) = error_messages.get(*field_name) {
+                    print_error(&mut buffer, field_name, error);
+                }
+            }
+
+            if !buffer.is_empty() {
+                output.push_str(&buffer);
+            }
         } else {
-            write!(output, "no live event").unwrap();
+          write!(output, "no live event").unwrap();
         }
 
         output
@@ -327,7 +357,7 @@ impl FootballData {
 #[cfg(test)]
 mod tests {
     use crate::{
-        football_data::{FootballData, Paging, Parameters},
+        football_data::{FootballData, FootballErrors, Paging, Parameters},
         Error,
     };
     use log::info;
@@ -397,10 +427,15 @@ mod tests {
             "Expected default parameters"
         );
 
-        assert!(
-            default_data.errors.is_empty(),
-            "Expected no errors in default data"
-        );
+
+        if let FootballErrors::Empty(empty_errors) = &default_data.errors {
+            assert!(
+                empty_errors.is_empty(),
+                "Expected no errors in default data"
+            );
+        } else {
+            panic!("Unexpected non-empty errors variant in default data");
+        }
 
         assert_eq!(default_data.results, 0, "Expected default results value");
 
