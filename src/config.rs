@@ -27,7 +27,7 @@ pub struct ConfigInner {
 
     /// Optional (default is `529 - Barcelona`)
     #[serde(default = "default_club_id")]
-    pub club_id: Option<u16>,
+    pub club_id: u16,
 }
 
 fn default_api_endpoint() -> StringType {
@@ -38,8 +38,8 @@ fn default_api_path() -> StringType {
     "fixtures".into()
 }
 
-fn default_club_id() -> Option<u16> {
-    Some(529)
+fn default_club_id() -> u16 {
+    529
 }
 
 /// Configuration struct
@@ -194,7 +194,7 @@ mod tests {
         assert!(conf.api_key.as_ref().unwrap().is_inline());
 
         assert_eq!(&conf.api_endpoint, "test.local");
-        assert_eq!(conf.club_id, Some(529));
+        assert_eq!(conf.club_id, 529);
         assert_eq!(&conf.api_path, "fixtures");
 
         Ok(())
@@ -226,7 +226,7 @@ mod tests {
         assert!(conf.api_key.as_ref().unwrap().is_inline());
 
         assert_eq!(&conf.api_endpoint, "test.local");
-        assert_eq!(conf.club_id, Some(529));
+        assert_eq!(conf.club_id, 529);
         assert_eq!(&conf.api_path, "fixtures");
 
         Ok(())

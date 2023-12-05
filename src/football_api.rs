@@ -32,24 +32,24 @@ pub enum ClubInfo {
         team: u16,
         next: u8,
         live: StringType,
-    }
+    },
 }
 
 #[cfg(feature = "cli")]
 impl Default for ClubInfo {
     fn default() -> Self {
-        Self::FixtureOpts { team: 529, next: 1, live: "all".into() }
+        Self::FixtureOpts {
+            team: 529,
+            next: 1,
+            live: "all".into(),
+        }
     }
 }
 
 impl fmt::Display for ClubInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::FixtureOpts {
-                team,
-                next,
-                live,
-            } => {
+            Self::FixtureOpts { team, next, live } => {
                 write!(f, "{team},{next},{live}")
             }
         }
@@ -60,31 +60,22 @@ impl ClubInfo {
     #[inline]
     #[must_use]
     pub fn from_parameter(team: u16, next: u8, live: StringType) -> Self {
-        Self::FixtureOpts {
-            team,
-            next,
-            live,
-        }
+        Self::FixtureOpts { team, next, live }
     }
 
     #[must_use]
     pub fn get_param_options(&self) -> Vec<(&'static str, ApiStringType)> {
         match self {
-            Self::FixtureOpts {
-                team,
-                next,
-                live,
-            } => {
+            Self::FixtureOpts { team, next, live } => {
                 let team = apistringtype_from_display(team);
                 let next = apistringtype_from_display(next);
-                let live = live;
 
                 // the `live` parameter cannot be used with `next`
                 if live.is_empty() {
                     return vec![("team", team), ("next", next)];
-                } else {
-                    return vec![("team", team), ("live", live.into())];
                 }
+
+                vec![("team", team), ("live", live.into())]
             }
         }
     }
@@ -172,20 +163,20 @@ impl FootballApi {
         }
     }
 
+    #[allow(clippy::unused_self)]
     fn get_api_options(&self, club: &ClubInfo) -> Vec<(&'static str, ApiStringType)> {
-        let options = club.get_param_options();
-
-        options
+        club.get_param_options()
     }
 
     /// Get `FootballData` from api
-    /// # Error
+    /// # Errors
     ///
     /// Will return error if `FootballApi::run_api` fails
     pub async fn get_fixture_data(&self, club: &ClubInfo) -> Result<FootballData, Error> {
         let options = self.get_api_options(club);
 
-        self.run_api(FootballCommands::FootballScore, &options).await
+        self.run_api(FootballCommands::FootballScore, &options)
+            .await
     }
 
     async fn run_api<T: serde::de::DeserializeOwned>(
@@ -303,7 +294,8 @@ mod tests {
 
         let club = ClubInfo::from_parameter(529, 0, "all".into());
         let opts = api.get_api_options(&club);
-        let expected: Vec<(&str, ApiStringType)> = vec![("team", "529".into()), ("live", "all".into())];
+        let expected: Vec<(&str, ApiStringType)> =
+            vec![("team", "529".into()), ("live", "all".into())];
         assert_eq!(opts, expected);
 
         Ok(())
@@ -311,7 +303,10 @@ mod tests {
 
     #[test]
     fn test_clubinfo_default() -> Result<(), Error> {
-        assert_eq!(ClubInfo::default(),  ClubInfo::from_parameter(529, 1, "all".into()));
+        assert_eq!(
+            ClubInfo::default(),
+            ClubInfo::from_parameter(529, 1, "all".into())
+        );
 
         Ok(())
     }

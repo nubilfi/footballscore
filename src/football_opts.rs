@@ -72,25 +72,23 @@ impl FootballOpts {
     /// Extract options from `FootballOpts` and apply to `FootballApi`
     /// # Errors
     /// Returns Error if clap help output fails
-    pub fn get_club(&self, default_club_id: Option<u16>) -> Result<ClubInfo, Error> {
-        let club = if let Some(club_id) = &self.club_id {
+    pub fn get_club(&self, default_club_id: u16) -> Result<ClubInfo, Error> {
+        let club = if let Some(club_id) = self.club_id {
             if let Some(next_match) = self.next_match {
-                ClubInfo::from_parameter(club_id.clone(), next_match, "".into())
+                ClubInfo::from_parameter(club_id, next_match, "".into())
             } else {
-                ClubInfo::from_parameter(club_id.clone(), 0, "all".into())
+                ClubInfo::from_parameter(club_id, 0, "all".into())
+            }
+        } else if self.club_id.is_none() {
+            if let Some(next_match) = self.next_match {
+                ClubInfo::from_parameter(default_club_id, next_match, "".into())
+            } else {
+                ClubInfo::from_parameter(default_club_id, 0, "all".into())
             }
         } else {
-            if self.club_id.is_none() {
-                if let Some(next_match) = self.next_match {
-                    ClubInfo::from_parameter(default_club_id.unwrap(), next_match, "".into())
-                } else {
-                    ClubInfo::from_parameter(default_club_id.unwrap(), 0, "all".into())
-                }
-            } else {
-                return Err(Error::InvalidInputError(format_string!(
-                    "\nERROR: You must specify the correct value\n"
-                )));
-            }
+            return Err(Error::InvalidInputError(format_string!(
+                "\nERROR: You must specify the correct value\n"
+            )));
         };
 
         Ok(club)
@@ -115,7 +113,7 @@ impl FootballOpts {
         }
 
         if self.club_id.is_none() {
-            self.club_id = config.club_id.clone();
+            self.club_id = Some(config.club_id);
         }
     }
 

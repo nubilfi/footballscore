@@ -1,24 +1,15 @@
-use serde::{Deserialize, Serialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::fmt::{self, Write};
 
 use crate::StringType;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Serialize, Default, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Periods {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub first: Option<u32>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub second: Option<u32>,
-}
-
-impl Default for Periods {
-    fn default() -> Self {
-        Self {
-            first: None,
-            second: None,
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq, Eq)]
@@ -101,7 +92,7 @@ pub struct Teams {
     pub away: Away,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Default, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Goals {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub home: Option<usize>,
@@ -110,27 +101,18 @@ pub struct Goals {
     pub away: Option<usize>,
 }
 
-impl Default for Goals {
-    fn default() -> Self {
-        Self {
-            home: None,
-            away: None,
-        }
-    }
-}
-
 impl fmt::Display for Goals {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match (self.home, self.away) {
-            (Some(home), Some(away)) => write!(f, "{} {}", home, away),
-            (Some(home), None) => write!(f, "{} ", home),
-            (None, Some(away)) => write!(f, " {}", away),
+            (Some(home), Some(away)) => write!(f, "{home} {away}"),
+            (Some(home), None) => write!(f, "{home} "),
+            (None, Some(away)) => write!(f, " {away}"),
             (None, None) => write!(f, ""),
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Default, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Halftime {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub home: Option<usize>,
@@ -139,16 +121,7 @@ pub struct Halftime {
     pub away: Option<usize>,
 }
 
-impl Default for Halftime {
-    fn default() -> Self {
-        Self {
-            home: None,
-            away: None,
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Default, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Fulltime {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub home: Option<usize>,
@@ -157,16 +130,7 @@ pub struct Fulltime {
     pub away: Option<usize>,
 }
 
-impl Default for Fulltime {
-    fn default() -> Self {
-        Self {
-            home: None,
-            away: None,
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Default, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Extratime {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub home: Option<usize>,
@@ -175,31 +139,13 @@ pub struct Extratime {
     pub away: Option<usize>,
 }
 
-impl Default for Extratime {
-    fn default() -> Self {
-        Self {
-            home: None,
-            away: None,
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Default, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Penalty {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub home: Option<usize>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub away: Option<usize>,
-}
-
-impl Default for Penalty {
-    fn default() -> Self {
-        Self {
-            home: None,
-            away: None,
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
@@ -262,7 +208,9 @@ impl<'de> Deserialize<'de> for Parameters {
             }
         }
 
-        Err(serde::de::Error::custom("Invalid JSON structure for `Parameters`"))
+        Err(serde::de::Error::custom(
+            "Invalid JSON structure for `Parameters`",
+        ))
     }
 }
 
@@ -288,7 +236,8 @@ impl Default for FootballData {
 
 impl FootballData {
     fn get_goals(&self) -> (Vec<Option<usize>>, Vec<Option<usize>>) {
-        let (home_goals, away_goals): (Vec<Option<usize>>, Vec<Option<usize>>) = self.response
+        let (home_goals, away_goals): (Vec<Option<usize>>, Vec<Option<usize>>) = self
+            .response
             .iter()
             .map(|resp| (resp.goals.home, resp.goals.away))
             .unzip();
@@ -324,15 +273,27 @@ impl FootballData {
             let home_team_name = &response.teams.home.name;
 
             if let Some(home_score) = home_goals.get(0).copied() {
-                write!(output, "{} {:?}", home_team_name, home_score.unwrap_or_default()).unwrap();
+                write!(
+                    output,
+                    "{} {:?}",
+                    home_team_name,
+                    home_score.unwrap_or_default()
+                )
+                .unwrap();
             } else {
-                write!(output, "{}", home_team_name).unwrap();
+                write!(output, "{home_team_name}").unwrap();
             }
 
             output.push_str(" vs ");
 
             if let Some(away_score) = away_goals.get(0).copied() {
-                write!(output, "{:?} {}", away_score.unwrap_or_default(), &response.teams.away.name).unwrap();
+                write!(
+                    output,
+                    "{:?} {}",
+                    away_score.unwrap_or_default(),
+                    &response.teams.away.name
+                )
+                .unwrap();
             } else {
                 write!(output, "{}", &response.teams.away.name).unwrap();
             }
@@ -356,7 +317,7 @@ impl FootballData {
 
             output.push('\n');
         } else {
-            write!(output, "{}", "no live event").unwrap();
+            write!(output, "no live event").unwrap();
         }
 
         output
