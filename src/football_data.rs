@@ -336,6 +336,25 @@ impl FootballData {
             } else {
                 write!(output, "{}", &response.teams.away.name).unwrap();
             }
+
+            write!(output, "\nNext match on {}\n", &response.fixture.date).unwrap();
+
+            write!(
+                output,
+                "\tLeague: {} - {}/{}",
+                &response.league.name, &response.league.season, &response.league.round
+            )
+            .unwrap();
+            write!(
+                output,
+                "\n\tVenue: {}, {}",
+                &response.fixture.venue.name, &response.fixture.venue.city
+            )
+            .unwrap();
+            write!(output, "\n\tHome team: {}", &response.teams.home.name).unwrap();
+            write!(output, "\n\tAway team: {}", &response.teams.away.name).unwrap();
+
+            output.push('\n');
         } else {
             write!(output, "{}", "no live event").unwrap();
         }
@@ -347,8 +366,8 @@ impl FootballData {
 #[cfg(test)]
 mod tests {
     use crate::{
-        football_data::{FootballData, Parameters, Paging},
-        Error
+        football_data::{FootballData, Paging, Parameters},
+        Error,
     };
     use log::info;
 
@@ -368,12 +387,31 @@ mod tests {
 
             if let Some(home_score) = home_goals.get(0).copied() {
                 if let Some(away_score) = away_goals.get(0).copied() {
-                    info!("{}: {} {:?} vs {} {:?}", buf.len(), home_team_name, home_score.unwrap_or_default(), away_team_name, away_score.unwrap_or_default());
+                    info!(
+                        "{}: {} {:?} vs {} {:?}",
+                        buf.len(),
+                        home_team_name,
+                        home_score.unwrap_or_default(),
+                        away_team_name,
+                        away_score.unwrap_or_default()
+                    );
                 } else {
-                    info!("{}: {} {:?} vs {}", buf.len(), home_team_name, home_score.unwrap_or_default(), away_team_name);
+                    info!(
+                        "{}: {} {:?} vs {}",
+                        buf.len(),
+                        home_team_name,
+                        home_score.unwrap_or_default(),
+                        away_team_name
+                    );
                 }
             } else if let Some(away_score) = away_goals.get(0).copied() {
-                info!("{}: {} vs {} {:?}", buf.len(), home_team_name, away_team_name, away_score.unwrap_or_default());
+                info!(
+                    "{}: {} vs {} {:?}",
+                    buf.len(),
+                    home_team_name,
+                    away_team_name,
+                    away_score.unwrap_or_default()
+                );
             } else {
                 info!("{}: {} vs {}", buf.len(), home_team_name, away_team_name);
             }
@@ -403,11 +441,7 @@ mod tests {
             "Expected no errors in default data"
         );
 
-        assert_eq!(
-            default_data.results,
-            0,
-            "Expected default results value"
-        );
+        assert_eq!(default_data.results, 0, "Expected default results value");
 
         assert_eq!(
             default_data.paging,
