@@ -334,7 +334,7 @@ impl FootballData {
             let mut buffer = String::with_capacity(500);
 
             let print_error = |output: &mut String, field_name: &str, error: &str| {
-                write!(output, "{} Error: {}\n", field_name, error).unwrap_or_default();
+                writeln!(output, "{field_name} Error: {error}").unwrap_or_default();
             };
 
             for field_name in &["access", "token", "requests"] {
