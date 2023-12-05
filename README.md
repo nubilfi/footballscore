@@ -24,9 +24,9 @@ OPTIONS:
 Output:
 
 ```bash
-Match: Le Havre 0 vs 1 Paris Saint German
+Match: Barcelona 0 vs 0 Girona
 ```
 
-Or, you might want to use it on `i3wm + Polybar` or something similar, here's an example of mine.
+Or, you might want to use it on `i3wm + Polybar + dunstify` or something similar, here's an example of mine.
 
 ![image](https://github.com/nubilfi/footballscore/blob/main/i3wm/footballscore-i3wm.png "image")
