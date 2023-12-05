@@ -30,3 +30,23 @@ Match: Barcelona 0 vs 0 Girona
 Or, you might want to use it on `i3wm + Polybar + dunstify` or something similar, here's an example of mine.
 
 ![image](https://github.com/nubilfi/footballscore/blob/main/i3wm/footballscore-i3wm.png "image")
+
+## Development
+
+```bash
+git clone git@github.com:nubilfi/footballscore.git
+
+# Build
+cd footballscore
+cargo build -r
+
+# Run unit tests and integration tests
+cargo test
+
+# Run benchmark
+cargo bench
+```
+
+## License
+
+[MIT](https://github.com/nubilfi/footballscore/blob/main/LICENSE)

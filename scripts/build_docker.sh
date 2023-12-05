@@ -21,7 +21,7 @@ echo "pkgrel=${RELEASE}" >> PKGBUILD
 echo "pkgdesc='CLI Football Score API'" >> PKGBUILD
 echo "arch=('x86_64')" >> PKGBUILD
 echo "license=('MIT')" >> PKGBUILD
-echo "depends=('python')" >> PKGBUILD  # Add necessary dependencies
+echo "depends=('python' 'cargo')" >> PKGBUILD  # Add necessary dependencies
 
 echo "package() {" >> PKGBUILD
 echo "    install -Dm755 ../target/release/footballscore \$pkgdir/usr/bin/footballscore" >> PKGBUILD
