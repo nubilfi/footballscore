@@ -2,6 +2,7 @@ use lazy_static::lazy_static;
 use parking_lot::{Mutex, MutexGuard};
 use serde::Deserialize;
 use std::{
+    collections::HashMap,
     env::{remove_var, set_var, var_os},
     ffi::{OsStr, OsString},
     ops::Deref,
@@ -124,17 +125,18 @@ lazy_static! {
 /// Configuration Test environment
 pub struct TestEnvs<'a> {
     _guard: MutexGuard<'a, ()>,
-    envs: Vec<(OsString, Option<OsString>)>,
+    envs: HashMap<OsString, Option<OsString>>,
 }
 
 impl<'a> TestEnvs<'a> {
     #[allow(dead_code)]
     pub fn new(keys: &[impl AsRef<OsStr>]) -> Self {
         let guard = TEST_MUTEX.lock();
-        let envs = keys
-            .iter()
-            .map(|k| (k.as_ref().to_os_string(), var_os(k)))
-            .collect();
+        let mut envs = HashMap::new();
+
+        for k in keys {
+            envs.insert(k.as_ref().to_os_string(), var_os(k.as_ref()));
+        }
 
         Self {
             _guard: guard,
