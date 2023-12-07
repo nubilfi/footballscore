@@ -62,7 +62,7 @@ macro_rules! format_string {
             use std::fmt::Write;
             let mut buf = stack_string::StackString::new();
 
-            std::write!(buf, "{}", std::format_args!($($arg)*)).unwrap();
+            write!(buf, "{}", std::format_args!($($arg)*)).unwrap();
             buf
         }
     };
@@ -88,7 +88,7 @@ macro_rules! format_string {
             use std::fmt::Write;
             let mut buf = String::new();
 
-            std::write!(buf, "{}", std::format_args!($($arg)*)).unwrap();
+            write!(buf, "{}", std::format_args!($($arg)*)).unwrap();
             buf
         }
     };
