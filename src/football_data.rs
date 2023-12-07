@@ -1,5 +1,8 @@
 use serde::{Deserialize, Deserializer, Serialize};
-use std::{fmt::{self, Write}, collections::HashMap};
+use std::{
+    collections::HashMap,
+    fmt::{self, Write},
+};
 
 use crate::StringType;
 
@@ -213,12 +216,21 @@ impl<'de> Deserialize<'de> for Parameters {
         let value: serde_json::Value = Deserialize::deserialize(deserializer)?;
 
         if let Some(parameters) = value.get("parameters") {
-            if let Some(live) = parameters.get("live").and_then(serde_json::Value::as_str) {
-                return Ok(Parameters::Live(live.into()));
-            } else if let Some(next) = parameters.get("next").and_then(serde_json::Value::as_str) {
-                return Ok(Parameters::Next(next.into()));
-            } else if let Some(team) = parameters.get("team").and_then(serde_json::Value::as_str) {
-                return Ok(Parameters::Team(team.into()));
+            if let Some((param_name, param_value)) =
+                parameters.as_object().and_then(|obj| obj.iter().next())
+            {
+                match param_name.as_str() {
+                    "live" => {
+                        return Ok(Parameters::Live(param_value.as_str().unwrap_or("").into()))
+                    }
+                    "next" => {
+                        return Ok(Parameters::Next(param_value.as_str().unwrap_or("").into()))
+                    }
+                    "team" => {
+                        return Ok(Parameters::Team(param_value.as_str().unwrap_or("").into()))
+                    }
+                    _ => (),
+                }
             }
         }
 
@@ -280,9 +292,11 @@ impl FootballData {
     /// ```
     #[must_use]
     pub fn get_current_fixtures(&self) -> StringType {
-        let mut output = StringType::from("Match: ");
+        let mut output = StringType::from("");
 
         if let Some(response) = self.response.first() {
+            output.push_str("Match: ");
+
             let (home_goals, away_goals) = self.get_goals();
             let home_team_name = &response.teams.home.name;
 
@@ -334,7 +348,7 @@ impl FootballData {
             let mut buffer = String::with_capacity(500);
 
             let print_error = |output: &mut String, field_name: &str, error: &str| {
-                writeln!(output, "{field_name} Error: {error}").unwrap_or_default();
+                writeln!(output, "Error: {field_name} - {error}").unwrap_or_default();
             };
 
             for field_name in &["access", "token", "requests"] {
@@ -347,7 +361,7 @@ impl FootballData {
                 output.push_str(&buffer);
             }
         } else {
-          write!(output, "no live event").unwrap();
+            write!(output, "Match: no live event").unwrap();
         }
 
         output
@@ -426,7 +440,6 @@ mod tests {
             Parameters::default(),
             "Expected default parameters"
         );
-
 
         if let FootballErrors::Empty(empty_errors) = &default_data.errors {
             assert!(
