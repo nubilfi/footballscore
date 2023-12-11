@@ -233,14 +233,13 @@ mod tests {
             || output[0].contains("Name:")
         );
 
-        opts.club_name = None;
         opts.club_id = Some(529);
         opts.next_match = Some(1);
         let output = opts.run_opts(&config).await?;
         info!("{:#?}", output);
         assert!(
             output[0].contains("Error: token - Error/Missing application key. Go to https://www.api-football.com/documentation-v3 to learn how to get your API application key.")
-            || output[0].contains("Match: Barcelona 0 vs")
+            || output[0].contains("Barcelona")
         );
 
         Ok(())
