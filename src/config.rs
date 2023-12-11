@@ -22,10 +22,6 @@ pub struct ConfigInner {
     #[serde(default = "default_api_endpoint")]
     pub api_endpoint: StringType,
 
-    /// Api path (default is `fixtures`)
-    #[serde(default = "default_api_path")]
-    pub api_path: StringType,
-
     /// Optional (default is `529 - Barcelona`)
     #[serde(default = "default_club_id")]
     pub club_id: u16,
@@ -33,10 +29,6 @@ pub struct ConfigInner {
 
 fn default_api_endpoint() -> StringType {
     "v3.football.api-sports.io".into()
-}
-
-fn default_api_path() -> StringType {
-    "fixtures".into()
 }
 
 fn default_club_id() -> u16 {
@@ -74,7 +66,7 @@ impl Config {
     /// use anyhow::Error;
     ///
     /// # fn main() -> Result<(), Error> {
-    /// # let _env = TestEnvs::new(&["API_KEY", "API_ENDPOINT", "CLUB_ID", "API_PATH"]);
+    /// # let _env = TestEnvs::new(&["API_KEY", "API_ENDPOINT", "CLUB_ID"]);
     /// # set_var("API_KEY", "api_key_value");
     /// # set_var("API_ENDPOINT", "v3.football.api-sports.io");
     /// let config = Config::init_config(None)?;
@@ -175,12 +167,11 @@ mod tests {
     fn test_config() -> Result<(), Error> {
         assert_eq!(Config::new(), Config::default());
 
-        let _env = TestEnvs::new(&["API_KEY", "API_ENDPOINT", "CLUB_ID", "API_PATH"]);
+        let _env = TestEnvs::new(&["API_KEY", "API_ENDPOINT", "CLUB_ID"]);
 
         set_var("API_KEY", "1e5765fc0c22df4e4ccf20581c2ef3d7");
         set_var("API_ENDPOINT", "test.local");
         set_var("CLUB_ID", "529");
-        set_var("API_PATH", "fixtures");
 
         let conf = Config::init_config(None)?;
         drop(_env);
@@ -197,19 +188,17 @@ mod tests {
 
         assert_eq!(&conf.api_endpoint, "test.local");
         assert_eq!(conf.club_id, 529);
-        assert_eq!(&conf.api_path, "fixtures");
 
         Ok(())
     }
 
     #[test]
     fn test_config_file() -> Result<(), Error> {
-        let _env = TestEnvs::new(&["API_KEY", "API_ENDPOINT", "CLUB_ID", "API_PATH"]);
+        let _env = TestEnvs::new(&["API_KEY", "API_ENDPOINT", "CLUB_ID"]);
 
         remove_var("API_KEY");
         remove_var("API_ENDPOINT");
         remove_var("CLUB_ID");
-        remove_var("API_PATH");
 
         let config_data = include_bytes!("../tests/config/config.env");
         let config_file = NamedTempFile::new()?;
@@ -229,7 +218,6 @@ mod tests {
 
         assert_eq!(&conf.api_endpoint, "test.local");
         assert_eq!(conf.club_id, 529);
-        assert_eq!(&conf.api_path, "fixtures");
 
         Ok(())
     }
