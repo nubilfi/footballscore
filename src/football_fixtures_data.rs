@@ -17,7 +17,7 @@ pub struct Periods {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq, Eq)]
 pub struct Venue {
-    pub id: u16,
+    pub id: Option<u16>,
     pub name: StringType,
     pub city: StringType,
 }
@@ -183,7 +183,7 @@ pub struct FootballErrorMessage {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct FootballData {
+pub struct FootballFixturesData {
     pub get: StringType,
 
     #[serde(flatten)]
@@ -235,7 +235,7 @@ impl<'de> Deserialize<'de> for Parameters {
         }
 
         Err(serde::de::Error::custom(
-            "Invalid JSON structure for `Parameters`",
+            "Invalid JSON structure for `Parameters` on fixtures data",
         ))
     }
 }
@@ -247,7 +247,7 @@ impl Parameters {
     }
 }
 
-impl Default for FootballData {
+impl Default for FootballFixturesData {
     fn default() -> Self {
         Self {
             get: "".into(),
@@ -260,7 +260,7 @@ impl Default for FootballData {
     }
 }
 
-impl FootballData {
+impl FootballFixturesData {
     fn get_goals(&self) -> (Vec<Option<usize>>, Vec<Option<usize>>) {
         let (home_goals, away_goals): (Vec<Option<usize>>, Vec<Option<usize>>) = self
             .response
@@ -273,7 +273,7 @@ impl FootballData {
 
     /// Write out formatted information about the fixtures for a mutable buffer.
     /// ```
-    /// use footballscore::football_data::FootballData;
+    /// use footballscore::football_fixtures_data::FootballFixturesData;
     /// # use anyhow::Error;
     /// # use std::io::{stdout, Write, Read};
     /// # use std::fs::File;
@@ -281,7 +281,7 @@ impl FootballData {
     /// # let mut buf = String::new();
     /// # let mut f = File::open("tests/resource/fixtures.json")?;
     /// # f.read_to_string(&mut buf)?;
-    /// let data: FootballData = serde_json::from_str(&buf)?;
+    /// let data: FootballFixturesData = serde_json::from_str(&buf)?;
     ///
     /// let buf = data.get_current_fixtures();
     ///
@@ -371,7 +371,7 @@ impl FootballData {
 #[cfg(test)]
 mod tests {
     use crate::{
-        football_data::{FootballData, FootballErrors, Paging, Parameters},
+        football_fixtures_data::{FootballErrors, FootballFixturesData, Paging, Parameters},
         Error,
     };
     use log::info;
@@ -379,7 +379,7 @@ mod tests {
     #[test]
     fn test_football_data() -> Result<(), Error> {
         let buf = include_str!("../tests/resource/fixtures.json");
-        let data: FootballData = serde_json::from_str(buf)?;
+        let data: FootballFixturesData = serde_json::from_str(buf)?;
 
         let buf = data.get_current_fixtures();
 
@@ -427,7 +427,7 @@ mod tests {
 
     #[test]
     fn test_default_football_data() -> Result<(), Error> {
-        let default_data = FootballData::default();
+        let default_data = FootballFixturesData::default();
 
         assert_eq!(
             default_data.get,
