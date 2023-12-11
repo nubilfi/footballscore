@@ -22,7 +22,8 @@ FLAGS:
 
 OPTIONS:
     -k, --api-key <api-key>             Api key (optional but either this or API_KEY environment variable must exist)
-        --next-match <next-match>       Show next match, 1 = true, 0 = false (optional)
+        --next-match <next-match>       Show next match (optional), but it must be `1`
+    -n, --club-name <club-name>         Get your favorite Club ID by name (optional)
     -c, --club-id <club-id>             Your favorite Club ID (optional), if not specified `529 (Barcelona)` will be assumed
 ```
 
