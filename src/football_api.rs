@@ -1,5 +1,5 @@
 use std::{
-    fmt::{self},
+    fmt,
     hash::{Hash, Hasher},
 };
 
@@ -9,8 +9,8 @@ use crate::Error;
 use reqwest::{Client, Url};
 
 use crate::{
-    apistringtype_from_display, football_data::FootballData, format_string, ApiStringType,
-    StringType,
+    apistringtype_from_display, football_fixtures_data::FootballFixturesData,
+    football_teams_data::FootballTeamsData, format_string, ApiStringType, StringType,
 };
 
 /// `FootballApi` contains a `reqwest` Client and all the metadata required to
@@ -21,27 +21,29 @@ pub struct FootballApi {
     client: Client,
     api_key: ApiStringType,
     api_endpoint: StringType,
-    api_path: StringType,
 }
 
 /// `live` and `next` is the only available parameter provided by the api.
-/// The `Live` parameter cannot be used with `Next`
+/// The `Live` parameter cannot be used with `Next`.
+/// `Name` will be used only for Teams endpoint.
 #[derive(Clone, Debug, PartialEq, Hash, Eq)]
 pub enum ClubInfo {
-    FixtureOpts {
+    EndpointParams {
         team: u16,
         next: u8,
         live: StringType,
+        name: StringType,
     },
 }
 
 #[cfg(feature = "cli")]
 impl Default for ClubInfo {
     fn default() -> Self {
-        Self::FixtureOpts {
+        Self::EndpointParams {
             team: 529,
             next: 1,
             live: "all".into(),
+            name: "".into(),
         }
     }
 }
@@ -49,8 +51,13 @@ impl Default for ClubInfo {
 impl fmt::Display for ClubInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::FixtureOpts { team, next, live } => {
-                write!(f, "{team},{next},{live}")
+            Self::EndpointParams {
+                team,
+                next,
+                live,
+                name,
+            } => {
+                write!(f, "{team},{next},{live},{name}")
             }
         }
     }
@@ -59,14 +66,28 @@ impl fmt::Display for ClubInfo {
 impl ClubInfo {
     #[inline]
     #[must_use]
-    pub fn from_parameter(team: u16, next: u8, live: StringType) -> Self {
-        Self::FixtureOpts { team, next, live }
+    pub fn from_parameter(team: u16, next: u8, live: StringType, name: StringType) -> Self {
+        Self::EndpointParams {
+            team,
+            next,
+            live,
+            name,
+        }
     }
 
     #[must_use]
     pub fn get_param_options(&self) -> Vec<(&'static str, ApiStringType)> {
         match self {
-            Self::FixtureOpts { team, next, live } => {
+            Self::EndpointParams {
+                team,
+                next,
+                live,
+                name,
+            } => {
+                if !name.is_empty() {
+                    return vec![("name", apistringtype_from_display(name))];
+                }
+
                 let team = apistringtype_from_display(team);
                 let next = apistringtype_from_display(next);
 
@@ -84,9 +105,7 @@ impl ClubInfo {
 #[cfg(feature = "cli")]
 impl PartialEq for FootballApi {
     fn eq(&self, other: &Self) -> bool {
-        self.api_key == other.api_key
-            && self.api_endpoint == other.api_endpoint
-            && self.api_path == other.api_path
+        self.api_key == other.api_key && self.api_endpoint == other.api_endpoint
     }
 }
 
@@ -109,13 +128,15 @@ impl Hash for FootballApi {
 
 #[derive(Clone, Copy)]
 enum FootballCommands {
-    FootballScore,
+    FootballFixture,
+    FootballTeam,
 }
 
 impl FootballCommands {
     fn to_str(self) -> &'static str {
         match self {
-            Self::FootballScore => "", // you can use this as an additional `api_path`
+            Self::FootballFixture => "fixtures", // you can use this as an additional `api path url`
+            Self::FootballTeam => "teams",       // you can use this as an additional `api path url`
         }
     }
 }
@@ -128,14 +149,13 @@ impl fmt::Display for FootballCommands {
 
 #[cfg(feature = "cli")]
 impl FootballApi {
-    /// Create `FootballApi` instance specifying `api_key`, `api_endpoint` and `api_path`
+    /// Create `FootballApi` instance specifying `api_key`, `api_endpoint`
     #[must_use]
-    pub fn new(api_key: &str, api_endpoint: &str, api_path: &str) -> Self {
+    pub fn new(api_key: &str, api_endpoint: &str) -> Self {
         Self {
             client: Client::new(),
             api_key: api_key.into(),
             api_endpoint: api_endpoint.into(),
-            api_path: api_path.into(),
         }
     }
 
@@ -155,28 +175,28 @@ impl FootballApi {
         }
     }
 
-    #[must_use]
-    pub fn with_path(self, api_path: &str) -> Self {
-        Self {
-            api_path: api_path.into(),
-            ..self
-        }
-    }
-
     #[allow(clippy::unused_self)]
     fn get_api_options(&self, club: &ClubInfo) -> Vec<(&'static str, ApiStringType)> {
         club.get_param_options()
     }
 
-    /// Get `FootballData` from api
+    /// Get `FootballFixturesData` from api
     /// # Errors
     ///
     /// Will return error if `FootballApi::run_api` fails
-    pub async fn get_fixture_data(&self, club: &ClubInfo) -> Result<FootballData, Error> {
+    pub async fn get_fixture_data(&self, club: &ClubInfo) -> Result<FootballFixturesData, Error> {
         let options = self.get_api_options(club);
-
-        self.run_api(FootballCommands::FootballScore, &options)
+        self.run_api(FootballCommands::FootballFixture, &options)
             .await
+    }
+
+    /// Get `FootballTeamsData` from api
+    /// # Errors
+    ///
+    /// Will return error if `FootballApi::run_api` fails
+    pub async fn get_team_data(&self, club: &ClubInfo) -> Result<FootballTeamsData, Error> {
+        let options = self.get_api_options(club);
+        self.run_api(FootballCommands::FootballTeam, &options).await
     }
 
     async fn run_api<T: serde::de::DeserializeOwned>(
@@ -185,12 +205,8 @@ impl FootballApi {
         options: &[(&'static str, ApiStringType)],
     ) -> Result<T, Error> {
         let api_endpoint = &self.api_endpoint;
-        let api_path = &self.api_path;
-
         let command = format_string!("{command}");
-
-        self._run_api(&command, options, api_endpoint, api_path)
-            .await
+        self._run_api(&command, options, api_endpoint).await
     }
 
     async fn _run_api<T: serde::de::DeserializeOwned>(
@@ -198,12 +214,9 @@ impl FootballApi {
         command: &str,
         options: &[(&'static str, ApiStringType)],
         api_endpoint: &str,
-        api_path: &str,
     ) -> Result<T, Error> {
-        let base_url = format!("https://{api_endpoint}/{api_path}?{command}");
-
+        let base_url = format!("https://{api_endpoint}/{command}?");
         let url = Url::parse_with_params(&base_url, options)?;
-
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::HeaderName::from_static("x-rapidapi-key"),
@@ -240,22 +253,39 @@ mod tests {
     async fn test_process_opts() -> Result<(), Error> {
         let api_key = "1e5765fc0c22df4e4ccf20581c2ef3d7";
         let api_endpoint = "v3.football.api-sports.io";
-        let api_path = "fixtures";
 
-        let api = FootballApi::new(api_key, api_endpoint, api_path);
-        let club_info = ClubInfo::from_parameter(529, 0, "all".into());
+        let api = FootballApi::new(api_key, api_endpoint);
+
+        // Fixtures
+        let club_info = ClubInfo::from_parameter(529, 0, "all".into(), "".into());
 
         let mut hasher0 = DefaultHasher::new();
         club_info.hash(&mut hasher0);
-        assert_eq!(hasher0.finish(), 7112614711327871795);
+        assert_eq!(hasher0.finish(), 17875426778410589958);
 
-        let club = ClubInfo::from_parameter(529, 0, "all".into());
+        let club = ClubInfo::from_parameter(529, 0, "all".into(), "".into());
 
         let fixture = api.get_fixture_data(&club).await?;
 
         assert_eq!(
             &fixture.get_current_fixtures(),
-            "Error: token - Error/Missing application key. Go to https://www.api-football.com/documentation-v3 to learn how to get your API application key.\n" // no live match
+            "Error: token - Error/Missing application key. Go to https://www.api-football.com/documentation-v3 to learn how to get your API application key.\n"
+        );
+
+        // Teams
+        let club_info = ClubInfo::from_parameter(0, 0, "".into(), "arsenal".into());
+
+        let mut hasher0 = DefaultHasher::new();
+        club_info.hash(&mut hasher0);
+        assert_eq!(hasher0.finish(), 8926715139541391656);
+
+        let club = ClubInfo::from_parameter(0, 0, "".into(), "arsenal".into());
+
+        let team = api.get_team_data(&club).await?;
+
+        assert_eq!(
+            &team.get_teams_information(),
+            "Error: token - Error/Missing application key. Go to https://www.api-football.com/documentation-v3 to learn how to get your API application key.\n"
         );
 
         Ok(())
@@ -267,13 +297,11 @@ mod tests {
         let api = FootballApi::new(
             "1e5765fc0c22df4e4ccf20581c2ef3d7",
             "v3.football.api-sports.io",
-            "fixtures",
         );
 
         let api2 = FootballApi::default()
             .with_key("1e5765fc0c22df4e4ccf20581c2ef3d7")
-            .with_endpoint("v3.football.api-sports.io")
-            .with_path("fixtures");
+            .with_endpoint("v3.football.api-sports.io");
         assert_eq!(api, api2);
 
         assert_eq!(
@@ -292,10 +320,17 @@ mod tests {
         info!("{:?}", api);
         assert_eq!(hasher0.finish(), hasher1.finish());
 
-        let club = ClubInfo::from_parameter(529, 0, "all".into());
+        // Fixtures
+        let club = ClubInfo::from_parameter(529, 0, "all".into(), "".into());
         let opts = api.get_api_options(&club);
         let expected: Vec<(&str, ApiStringType)> =
             vec![("team", "529".into()), ("live", "all".into())];
+        assert_eq!(opts, expected);
+
+        // Teams
+        let club = ClubInfo::from_parameter(0, 0, "".into(), "arsenal".into());
+        let opts = api.get_api_options(&club);
+        let expected: Vec<(&str, ApiStringType)> = vec![("name", "arsenal".into())];
         assert_eq!(opts, expected);
 
         Ok(())
@@ -305,7 +340,7 @@ mod tests {
     fn test_clubinfo_default() -> Result<(), Error> {
         assert_eq!(
             ClubInfo::default(),
-            ClubInfo::from_parameter(529, 1, "all".into())
+            ClubInfo::from_parameter(529, 1, "all".into(), "".into())
         );
 
         Ok(())
