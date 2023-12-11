@@ -1,0 +1,34 @@
+{
+    "get": "teams",
+    "parameters": {
+        "name": "Barcelona"
+    },
+    "errors": [],
+    "results": 1,
+    "paging": {
+        "current": 1,
+        "total": 1
+    },
+    "response": [
+        {
+            "team": {
+                "id": 529,
+                "name": "Barcelona",
+                "code": "BAR",
+                "country": "Spain",
+                "founded": 1899,
+                "national": false,
+                "logo": "https:\/\/media-4.api-sports.io\/football\/teams\/529.png"
+            },
+            "venue": {
+                "id": 19939,
+                "name": "Estadi Olímpic Lluís Companys",
+                "address": "Carrer de l&apos;Estadi",
+                "city": "Barcelona",
+                "capacity": 55926,
+                "surface": "grass",
+                "image": "https:\/\/media-4.api-sports.io\/football\/venues\/19939.png"
+            }
+        }
+    ]
+}
