@@ -1,7 +1,7 @@
 use serde::{Deserialize, Deserializer, Serialize};
 use std::{
     collections::HashMap,
-    fmt::{self, Write},
+    fmt::Write,
 };
 
 use crate::StringType;
@@ -22,23 +22,13 @@ pub struct Venue {
     pub city: StringType,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Default, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Status {
     pub long: StringType,
     pub short: StringType,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub elapsed: Option<u8>,
-}
-
-impl Default for Status {
-    fn default() -> Self {
-        Self {
-            long: "Not Started".into(),
-            short: "NS".into(),
-            elapsed: None,
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq)]
@@ -102,17 +92,6 @@ pub struct Goals {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub away: Option<usize>,
-}
-
-impl fmt::Display for Goals {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match (self.home, self.away) {
-            (Some(home), Some(away)) => write!(f, "{home} {away}"),
-            (Some(home), None) => write!(f, "{home} "),
-            (None, Some(away)) => write!(f, " {away}"),
-            (None, None) => write!(f, ""),
-        }
-    }
 }
 
 #[derive(Serialize, Default, Deserialize, Debug, Clone, PartialEq, Eq)]
