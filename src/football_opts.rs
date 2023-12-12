@@ -233,6 +233,7 @@ mod tests {
             || output[0].contains("Name:")
         );
 
+        opts.club_name = None;
         opts.club_id = Some(529);
         opts.next_match = Some(1);
         let output = opts.run_opts(&config).await?;
