@@ -33,6 +33,16 @@ Output:
 Match: Barcelona 0 vs 0 Girona
 ```
 
+To retrieve _live score_ data, you only need to use `--club-id` option. For example:
+
+```bash
+footballscore -k=api_key_value -c=club_id_value
+```
+
+Want to stay updated regularly? Set up an `interval` for specific durations on your panel item.
+
+**Update Frequency** : The data is updated every 15 seconds. Although the data is updated every 15 seconds, depending on the competition there may be a delay between reality and the availability of data in the API.
+
 Or, you might want to use it on `i3wm + Polybar + dunstify` or something similar, here's an example of mine.
 
 ![image](https://github.com/nubilfi/footballscore/blob/main/i3wm/footballscore-i3wm.png "image")
