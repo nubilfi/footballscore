@@ -75,20 +75,28 @@ impl<'de> Deserialize<'de> for Parameters {
     where
         D: Deserializer<'de>,
     {
+        use serde::de::Error;
+
         let value: serde_json::Value = Deserialize::deserialize(deserializer)?;
 
-        if let Some(parameters) = value.get("parameters") {
-            if let Some((param_name, param_value)) =
-                parameters.as_object().and_then(|obj| obj.iter().next())
-            {
-                if param_name.as_str() == "name" {
-                    return Ok(Parameters::Name(param_value.as_str().unwrap_or("").into()));
-                }
+        if let Some(parameters) = value.get("parameters").and_then(|p| p.as_object()) {
+            for (param_name, param_value) in parameters {
+                let param = match param_name.as_str() {
+                    "name" => Parameters::Name(param_value.as_str().unwrap_or("").into()),
+                    _ => {
+                        let error_msg = format!(
+                            "Encountered an issue with parameter naming `{}` in the teams data",
+                            param_name
+                        );
+                        return Err(Error::custom(error_msg));
+                    }
+                };
+                return Ok(param);
             }
         }
 
-        Err(serde::de::Error::custom(
-            "Invalid JSON structure for `Parameters` on teams data",
+        Err(Error::custom(
+            "Invalid JSON structure detected while parsing `Parameters` for teams data",
         ))
     }
 }
@@ -143,28 +151,22 @@ impl FootballTeamsData {
 
             output.push_str("Here's your club information:\n");
 
-            writeln!(
-                output,
-                "Name: {}",
-                team_info.name.clone().unwrap_or_default()
-            )
-            .unwrap();
+            if let Some(name) = &team_info.name {
+                writeln!(output, "Name: {}", name).unwrap();
+            }
 
             writeln!(output, "Club ID: {}", team_info.id.unwrap_or_default()).unwrap();
 
-            writeln!(
-                output,
-                "Venue: {}",
-                venue_info.name.clone().unwrap_or_default()
-            )
-            .unwrap();
+            if let Some(venue_name) = &venue_info.name {
+                writeln!(output, "Venue: {}", venue_name).unwrap();
+            }
 
             output.push('\n');
         } else if let FootballTeamsErrors::WithMessages(error_messages) = &self.errors {
             let mut buffer = String::with_capacity(500);
 
             let print_error = |output: &mut String, field_name: &str, error: &str| {
-                writeln!(output, "Error: {field_name} - {error}").unwrap_or_default();
+                writeln!(output, "Error: {} - {}", field_name, error).unwrap();
             };
 
             for field_name in &["access", "token", "requests", "name"] {
@@ -177,7 +179,7 @@ impl FootballTeamsData {
                 output.push_str(&buffer);
             }
         } else {
-            write!(output, "Your club data is unavailable").unwrap();
+            output.push_str("Your club data is unavailable");
         }
 
         output

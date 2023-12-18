@@ -84,19 +84,20 @@ impl ClubInfo {
                 live,
                 name,
             } => {
-                if !name.is_empty() {
-                    return vec![("name", apistringtype_from_display(name))];
+                match name.as_str() {
+                    "" => {
+                        let team_str = apistringtype_from_display(team);
+                        let next_str = apistringtype_from_display(next);
+
+                        // the `live` parameter cannot be used with `next`
+                        if live.is_empty() {
+                            return vec![("team", team_str), ("next", next_str)];
+                        }
+
+                        vec![("team", team_str), ("live", live.into())]
+                    }
+                    _ => vec![("name", apistringtype_from_display(name))],
                 }
-
-                let team = apistringtype_from_display(team);
-                let next = apistringtype_from_display(next);
-
-                // the `live` parameter cannot be used with `next`
-                if live.is_empty() {
-                    return vec![("team", team), ("next", next)];
-                }
-
-                vec![("team", team), ("live", live.into())]
             }
         }
     }

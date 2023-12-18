@@ -1,8 +1,5 @@
 use serde::{Deserialize, Deserializer, Serialize};
-use std::{
-    collections::HashMap,
-    fmt::Write,
-};
+use std::{collections::HashMap, fmt::Write};
 
 use crate::StringType;
 
@@ -192,29 +189,30 @@ impl<'de> Deserialize<'de> for Parameters {
     where
         D: Deserializer<'de>,
     {
+        use serde::de::Error;
+
         let value: serde_json::Value = Deserialize::deserialize(deserializer)?;
 
-        if let Some(parameters) = value.get("parameters") {
-            if let Some((param_name, param_value)) =
-                parameters.as_object().and_then(|obj| obj.iter().next())
-            {
-                match param_name.as_str() {
-                    "live" => {
-                        return Ok(Parameters::Live(param_value.as_str().unwrap_or("").into()))
+        if let Some(parameters) = value.get("parameters").and_then(|p| p.as_object()) {
+            for (param_name, param_value) in parameters {
+                let param = match param_name.as_str() {
+                    "live" => Parameters::Live(param_value.as_str().unwrap_or("").into()),
+                    "next" => Parameters::Next(param_value.as_str().unwrap_or("").into()),
+                    "team" => Parameters::Team(param_value.as_str().unwrap_or("").into()),
+                    _ => {
+                        let error_msg = format!(
+                            "Encountered an issue with parameter naming `{}` in the fixtures data",
+                            param_name
+                        );
+                        return Err(Error::custom(error_msg));
                     }
-                    "next" => {
-                        return Ok(Parameters::Next(param_value.as_str().unwrap_or("").into()))
-                    }
-                    "team" => {
-                        return Ok(Parameters::Team(param_value.as_str().unwrap_or("").into()))
-                    }
-                    _ => (),
-                }
+                };
+                return Ok(param);
             }
         }
 
-        Err(serde::de::Error::custom(
-            "Invalid JSON structure for `Parameters` on fixtures data",
+        Err(Error::custom(
+            "Invalid JSON structure detected while parsing `Parameters` for fixtures data",
         ))
     }
 }
