@@ -194,18 +194,12 @@ impl<'de> Deserialize<'de> for Parameters {
         let value: serde_json::Value = Deserialize::deserialize(deserializer)?;
 
         if let Some(parameters) = value.get("parameters").and_then(|p| p.as_object()) {
-            for (param_name, param_value) in parameters {
+            if let Some((param_name, param_value)) = parameters.into_iter().next() {
                 let param = match param_name.as_str() {
                     "live" => Parameters::Live(param_value.as_str().unwrap_or("").into()),
                     "next" => Parameters::Next(param_value.as_str().unwrap_or("").into()),
                     "team" => Parameters::Team(param_value.as_str().unwrap_or("").into()),
-                    _ => {
-                        let error_msg = format!(
-                            "Encountered an issue with parameter naming `{}` in the fixtures data",
-                            param_name
-                        );
-                        return Err(Error::custom(error_msg));
-                    }
+                    _ => return Err(Error::custom(format!("Encountered an issue with parameter naming `{param_name}` in the fixtures data")))
                 };
                 return Ok(param);
             }

@@ -80,16 +80,10 @@ impl<'de> Deserialize<'de> for Parameters {
         let value: serde_json::Value = Deserialize::deserialize(deserializer)?;
 
         if let Some(parameters) = value.get("parameters").and_then(|p| p.as_object()) {
-            for (param_name, param_value) in parameters {
+            if let Some((param_name, param_value)) = parameters.into_iter().next() {
                 let param = match param_name.as_str() {
                     "name" => Parameters::Name(param_value.as_str().unwrap_or("").into()),
-                    _ => {
-                        let error_msg = format!(
-                            "Encountered an issue with parameter naming `{}` in the teams data",
-                            param_name
-                        );
-                        return Err(Error::custom(error_msg));
-                    }
+                    _ => return Err(Error::custom(format!("Encountered an issue with parameter naming `{param_name}` in the teams data")))
                 };
                 return Ok(param);
             }
@@ -152,13 +146,13 @@ impl FootballTeamsData {
             output.push_str("Here's your club information:\n");
 
             if let Some(name) = &team_info.name {
-                writeln!(output, "Name: {}", name).unwrap();
+                writeln!(output, "Name: {name}").unwrap();
             }
 
             writeln!(output, "Club ID: {}", team_info.id.unwrap_or_default()).unwrap();
 
             if let Some(venue_name) = &venue_info.name {
-                writeln!(output, "Venue: {}", venue_name).unwrap();
+                writeln!(output, "Venue: {venue_name}").unwrap();
             }
 
             output.push('\n');
@@ -166,7 +160,7 @@ impl FootballTeamsData {
             let mut buffer = String::with_capacity(500);
 
             let print_error = |output: &mut String, field_name: &str, error: &str| {
-                writeln!(output, "Error: {} - {}", field_name, error).unwrap();
+                writeln!(output, "Error: {field_name} - {error}").unwrap();
             };
 
             for field_name in &["access", "token", "requests", "name"] {
