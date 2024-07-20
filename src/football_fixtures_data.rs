@@ -271,7 +271,7 @@ impl FootballFixturesData {
             let (home_goals, away_goals) = self.get_goals();
             let home_team_name = &response.teams.home.name;
 
-            if let Some(home_score) = home_goals.get(0).copied() {
+            if let Some(home_score) = home_goals.first().copied() {
                 write!(
                     output,
                     "{} {:?}",
@@ -285,7 +285,7 @@ impl FootballFixturesData {
 
             output.push_str(" vs ");
 
-            if let Some(away_score) = away_goals.get(0).copied() {
+            if let Some(away_score) = away_goals.first().copied() {
                 write!(
                     output,
                     "{:?} {}",
@@ -361,8 +361,8 @@ mod tests {
             let home_team_name = &response.teams.home.name;
             let away_team_name = &response.teams.away.name;
 
-            if let Some(home_score) = home_goals.get(0).copied() {
-                if let Some(away_score) = away_goals.get(0).copied() {
+            if let Some(home_score) = home_goals.first().copied() {
+                if let Some(away_score) = away_goals.first().copied() {
                     info!(
                         "{}: {} {:?} vs {} {:?}",
                         buf.len(),
@@ -380,7 +380,7 @@ mod tests {
                         away_team_name
                     );
                 }
-            } else if let Some(away_score) = away_goals.get(0).copied() {
+            } else if let Some(away_score) = away_goals.first().copied() {
                 info!(
                     "{}: {} vs {} {:?}",
                     buf.len(),

@@ -19,7 +19,7 @@ use crate::football_api::FootballApi;
 #[cfg(feature = "cli")]
 #[derive(Parser, Default, Serialize, Deserialize)]
 pub struct FootballOpts {
-    /// Api key (optional but either this or API_KEY environment variable must exist)
+    /// Api key (optional but either this or `API_KEY` environment variable must exist)
     #[clap(short = 'k', long)]
     api_key: Option<ApiStringType>,
 
@@ -115,7 +115,7 @@ impl FootballOpts {
 
     fn apply_defaults(&mut self, config: &Config) {
         if self.api_key.is_none() {
-            self.api_key = config.api_key.clone();
+            self.api_key.clone_from(&config.api_key);
         }
 
         if self.club_id.is_none() {
@@ -221,8 +221,10 @@ mod tests {
         let config = Config::init_config(None)?;
         drop(_env);
 
-        let mut opts = FootballOpts::default();
-        opts.club_name = Some("arsenal".into());
+        let mut opts = FootballOpts {
+            club_name: Some("arsenal".into()),
+            ..Default::default()
+        };
         opts.apply_defaults(&config);
 
         let output = opts.run_opts(&config).await?;
@@ -249,9 +251,11 @@ mod tests {
     #[test]
     fn test_get_fixtures() -> Result<(), Error> {
         // next fixture
-        let mut opts = FootballOpts::default();
-        opts.club_id = Some(529);
-        opts.next_match = Some(1);
+        let opts = FootballOpts {
+            club_id: Some(529),
+            next_match: Some(1),
+            ..Default::default()
+        };
         let club = opts.get_club(opts.club_id.unwrap_or_default(), "")?;
 
         assert_eq!(
@@ -265,8 +269,10 @@ mod tests {
         );
 
         // live fixture
-        let mut opts = FootballOpts::default();
-        opts.club_id = Some(529);
+        let opts = FootballOpts {
+            club_id: Some(529),
+            ..Default::default()
+        };
         let club = opts.get_club(opts.club_id.unwrap_or_default(), "")?;
 
         assert_eq!(
@@ -280,10 +286,12 @@ mod tests {
         );
 
         // club information
-        let mut opts = FootballOpts::default();
-        opts.club_id = None;
-        opts.next_match = None;
-        opts.club_name = Some("arsenal".into());
+        let opts = FootballOpts {
+            club_id: None,
+            next_match: None,
+            club_name: Some("arsenal".into()),
+            ..Default::default()
+        };
         let club = opts.get_club(
             opts.club_id.unwrap_or_default(),
             opts.club_name.clone().unwrap().as_str(),

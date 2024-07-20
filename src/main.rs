@@ -14,8 +14,18 @@ async fn main() -> Result<(), Error> {
         Ok(()) => Ok(()),
         Err(Error::InvalidInputError(e)) => {
             let help_message = FootballOpts::api_help_msg();
-            println!("{e}\n{help_message}");
-
+            eprintln!("{e}\n{help_message}");
+            Ok(())
+        }
+        Err(Error::ReqwestError(req_err)) => {
+            match req_err.url() {
+                Some(_) => {
+                    eprintln!("Network Request Error");
+                }
+                None => {
+                    eprintln!("Invalid API Request");
+                }
+            }
             Ok(())
         }
         Err(e) => Err(e),

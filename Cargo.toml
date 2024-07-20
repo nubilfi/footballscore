@@ -1,6 +1,6 @@
 [package]
 name = "footballscore"
-version = "0.2.3"
+version = "0.2.4"
 edition = "2021"
 license-file = "LICENSE"
 description = "a CLI tool to retrieve football score from api-football.com"
@@ -28,7 +28,7 @@ envy = "0.4.2"
 lazy_static = "1.4.0"
 log = "0.4.20"
 parking_lot = "0.12.1"
-reqwest = { version = "0.11.22", features = [
+reqwest = { version = "0.12.5", features = [
   "json",
   "rustls-tls",
   "gzip",

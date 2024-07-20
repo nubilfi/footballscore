@@ -83,7 +83,12 @@ impl<'de> Deserialize<'de> for Parameters {
             if let Some((param_name, param_value)) = parameters.into_iter().next() {
                 let param = match param_name.as_str() {
                     "name" => Parameters::Name(param_value.as_str().unwrap_or("").into()),
-                    _ => return Err(Error::custom(format!("Encountered an issue with parameter naming `{param_name}` in the teams data")))
+                    _ => {
+                        return Err(Error::custom(format!(
+                            "Encountered an issue with parameter naming `{param_name}` in the \
+                             teams data"
+                        )))
+                    }
                 };
                 return Ok(param);
             }
@@ -206,7 +211,7 @@ mod tests {
                 "{}: Name: {}\nClubID: {}\n",
                 buf.len(),
                 team_info.name.clone().unwrap_or_default(),
-                team_info.id.clone().unwrap_or_default()
+                team_info.id.unwrap_or_default()
             );
             info!(
                 "{}: Venue: {}\n",
