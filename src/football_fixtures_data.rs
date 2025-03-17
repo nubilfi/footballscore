@@ -1,3 +1,4 @@
+use chrono::DateTime;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::{collections::HashMap, fmt::Write};
 
@@ -297,7 +298,14 @@ impl FootballFixturesData {
                 write!(output, "{}", &response.teams.away.name).unwrap();
             }
 
-            write!(output, "\nNext match on {}\n", &response.fixture.date).unwrap();
+            write!(
+                output,
+                "\nNext match on {}\n",
+                DateTime::parse_from_rfc3339(&response.fixture.date)
+                    .unwrap_or_default()
+                    .format("%B %d, %Y at %I:%M %p")
+            )
+            .unwrap();
 
             write!(
                 output,
