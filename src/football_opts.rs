@@ -130,6 +130,7 @@ impl FootballOpts {
 }
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods)]
 mod tests {
     use log::info;
     use std::env::set_var;
@@ -146,7 +147,7 @@ mod tests {
     #[test]
     fn test_api_help_msg() -> Result<(), Error> {
         let msg = FootballOpts::api_help_msg();
-        assert!(msg.len() > 0);
+        assert!(!msg.is_empty());
         Ok(())
     }
 
@@ -174,20 +175,16 @@ mod tests {
         let endpoint_fixtures = opts.get_club(529, "")?;
         let live = "StackString(\"all\")";
         let name = "StackString(\"\")";
-        let expected = format!(
-            "EndpointParams {{ team: 529, next: 0, live: {}, name: {} }}",
-            live, name
-        );
+        let expected =
+            format!("EndpointParams {{ team: 529, next: 0, live: {live}, name: {name} }}");
 
         assert_eq!(format!("{endpoint_fixtures:?}"), expected);
 
         let endpoint_teams = opts.get_club(0, "arsenal")?;
         let live = "StackString(\"all\")";
         let name = "StackString(\"arsenal\")";
-        let expected = format!(
-            "EndpointParams {{ team: 529, next: 0, live: {}, name: {} }}",
-            live, name
-        );
+        let expected =
+            format!("EndpointParams {{ team: 529, next: 0, live: {live}, name: {name} }}",);
 
         assert_eq!(format!("{endpoint_teams:?}"), expected);
         Ok(())

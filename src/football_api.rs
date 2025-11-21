@@ -207,10 +207,10 @@ impl FootballApi {
     ) -> Result<T, Error> {
         let api_endpoint = &self.api_endpoint;
         let command = format_string!("{command}");
-        self._run_api(&command, options, api_endpoint).await
+        self.run_api_client(&command, options, api_endpoint).await
     }
 
-    async fn _run_api<T: serde::de::DeserializeOwned>(
+    async fn run_api_client<T: serde::de::DeserializeOwned>(
         &self,
         command: &str,
         options: &[(&'static str, ApiStringType)],
@@ -221,7 +221,7 @@ impl FootballApi {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::HeaderName::from_static("x-rapidapi-key"),
-            reqwest::header::HeaderValue::from_str(&self.api_key).unwrap(),
+            reqwest::header::HeaderValue::from_str(self.api_key.as_str())?,
         );
 
         self.client
@@ -237,6 +237,7 @@ impl FootballApi {
 }
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods)]
 mod tests {
     use log::info;
     use std::{

@@ -3,14 +3,12 @@ use footballscore::{config::Config, football_opts::FootballOpts, Error};
 
 #[cfg(not(tarpaulin_include))]
 #[cfg(feature = "cli")]
+#[allow(clippy::disallowed_methods)]
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let config = Config::init_config(None)?;
 
-    match tokio::spawn(async move { FootballOpts::parse_opts(&config).await })
-        .await
-        .unwrap()
-    {
+    match tokio::spawn(async move { FootballOpts::parse_opts(&config).await }).await? {
         Ok(()) => Ok(()),
         Err(Error::InvalidInputError(e)) => {
             let help_message = FootballOpts::api_help_msg();

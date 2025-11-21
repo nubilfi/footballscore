@@ -1,4 +1,3 @@
-use lazy_static::lazy_static;
 use parking_lot::{Mutex, MutexGuard};
 use serde::Deserialize;
 use std::{
@@ -110,9 +109,7 @@ impl Deref for Config {
     }
 }
 
-lazy_static! {
-    static ref TEST_MUTEX: Mutex<()> = Mutex::new(());
-}
+static TEST_MUTEX: std::sync::LazyLock<Mutex<()>> = std::sync::LazyLock::new(|| Mutex::new(()));
 
 /// Configuration Test environment
 pub struct TestEnvs<'a> {
@@ -120,7 +117,7 @@ pub struct TestEnvs<'a> {
     envs: HashMap<OsString, Option<OsString>>,
 }
 
-impl<'a> TestEnvs<'a> {
+impl TestEnvs<'_> {
     #[allow(dead_code)]
     pub fn new(keys: &[impl AsRef<OsStr>]) -> Self {
         let guard = TEST_MUTEX.lock();
@@ -137,7 +134,7 @@ impl<'a> TestEnvs<'a> {
     }
 }
 
-impl<'a> Drop for TestEnvs<'a> {
+impl Drop for TestEnvs<'_> {
     fn drop(&mut self) {
         for (key, val) in &self.envs {
             if let Some(val) = val {
@@ -150,6 +147,7 @@ impl<'a> Drop for TestEnvs<'a> {
 }
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods)]
 mod tests {
     use log::info;
     use std::{

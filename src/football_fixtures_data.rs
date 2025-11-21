@@ -273,54 +273,49 @@ impl FootballFixturesData {
             let home_team_name = &response.teams.home.name;
 
             if let Some(home_score) = home_goals.first().copied() {
-                write!(
+                let _ = write!(
                     output,
                     "{} {:?}",
                     home_team_name,
                     home_score.unwrap_or_default()
-                )
-                .unwrap();
+                );
             } else {
-                write!(output, "{home_team_name}").unwrap();
+                let _ = write!(output, "{home_team_name}");
             }
 
             output.push_str(" vs ");
 
             if let Some(away_score) = away_goals.first().copied() {
-                write!(
+                let _ = write!(
                     output,
                     "{:?} {}",
                     away_score.unwrap_or_default(),
                     &response.teams.away.name
-                )
-                .unwrap();
+                );
             } else {
-                write!(output, "{}", &response.teams.away.name).unwrap();
+                let _ = write!(output, "{}", &response.teams.away.name);
             }
 
-            write!(
+            let _ = write!(
                 output,
                 "\nNext match on {}\n",
                 DateTime::parse_from_rfc3339(&response.fixture.date)
                     .unwrap_or_default()
                     .format("%B %d, %Y at %I:%M %p")
-            )
-            .unwrap();
+            );
 
-            write!(
+            let _ = write!(
                 output,
                 "\tLeague: {} - {}/{}",
                 &response.league.name, &response.league.season, &response.league.round
-            )
-            .unwrap();
-            write!(
+            );
+            let _ = write!(
                 output,
                 "\n\tVenue: {}, {}",
                 &response.fixture.venue.name, &response.fixture.venue.city
-            )
-            .unwrap();
-            write!(output, "\n\tHome team: {}", &response.teams.home.name).unwrap();
-            write!(output, "\n\tAway team: {}", &response.teams.away.name).unwrap();
+            );
+            let _ = write!(output, "\n\tHome team: {}", &response.teams.home.name);
+            let _ = write!(output, "\n\tAway team: {}", &response.teams.away.name);
 
             output.push('\n');
         } else if let FootballErrors::WithMessages(error_messages) = &self.errors {
@@ -340,7 +335,7 @@ impl FootballFixturesData {
                 output.push_str(&buffer);
             }
         } else {
-            write!(output, "Match: no live event").unwrap();
+            let _ = write!(output, "Match: no live event");
         }
 
         output

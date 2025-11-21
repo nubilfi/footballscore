@@ -151,13 +151,13 @@ impl FootballTeamsData {
             output.push_str("Here's your club information:\n");
 
             if let Some(name) = &team_info.name {
-                writeln!(output, "Name: {name}").unwrap();
+                let _ = writeln!(output, "Name: {name}");
             }
 
-            writeln!(output, "Club ID: {}", team_info.id.unwrap_or_default()).unwrap();
+            let _ = writeln!(output, "Club ID: {}", team_info.id.unwrap_or_default());
 
             if let Some(venue_name) = &venue_info.name {
-                writeln!(output, "Venue: {venue_name}").unwrap();
+                let _ = writeln!(output, "Venue: {venue_name}");
             }
 
             output.push('\n');
@@ -165,7 +165,7 @@ impl FootballTeamsData {
             let mut buffer = String::with_capacity(500);
 
             let print_error = |output: &mut String, field_name: &str, error: &str| {
-                writeln!(output, "Error: {field_name} - {error}").unwrap();
+                let _ = writeln!(output, "Error: {field_name} - {error}");
             };
 
             for field_name in &["access", "token", "requests", "name"] {
