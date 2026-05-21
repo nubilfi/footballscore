@@ -39,6 +39,9 @@ pub mod football_teams_data;
 /// CLI App Options and implementation
 pub mod football_opts;
 
+/// Free-tier (backup) API client for api.soccerdataapi.com
+pub mod soccer_api;
+
 /// `FootballUtil` Error
 pub mod error;
 pub use error::Error;

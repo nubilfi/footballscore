@@ -24,6 +24,13 @@ pub struct ConfigInner {
     /// Optional (default is `529 - Barcelona`)
     #[serde(default = "default_club_id")]
     pub club_id: u16,
+
+    /// api.soccerdataapi.com endpoint (optional)
+    #[serde(default = "default_soccer_endpoint")]
+    pub soccer_endpoint: StringType,
+
+    /// api.soccerdataapi.com auth token (optional)
+    pub auth_token: Option<ApiStringType>,
 }
 
 fn default_api_endpoint() -> StringType {
@@ -32,6 +39,10 @@ fn default_api_endpoint() -> StringType {
 
 fn default_club_id() -> u16 {
     529
+}
+
+fn default_soccer_endpoint() -> StringType {
+    "api.soccerdataapi.com".into()
 }
 
 /// Configuration struct
