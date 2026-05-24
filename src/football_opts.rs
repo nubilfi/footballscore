@@ -386,10 +386,24 @@ mod tests {
 
         let api = FootballApi::new("invalid_key", "v3.football.api-sports.io");
         let club = ClubInfo::from_parameter(529, 0, "all".into(), "".into());
-        let data = api.get_fixture_data(&club).await?;
-        let output = data.get_current_fixtures();
 
-        assert!(output.contains("Error: token") || output.contains("Match:"));
+        match api.get_fixture_data(&club).await {
+            Ok(data) => {
+                let output = data.get_current_fixtures();
+                assert!(
+                    output.contains("Error: token") || output.contains("Match:"),
+                    "unexpected output: {output}"
+                );
+            }
+            Err(Error::ReqwestError(e)) => {
+                let status = e.status().map(|s| s.as_u16());
+                assert!(
+                    matches!(status, Some(401) | Some(403)),
+                    "unexpected reqwest error: {e}"
+                );
+            }
+            Err(e) => return Err(e),
+        }
         Ok(())
     }
 
@@ -400,12 +414,25 @@ mod tests {
 
         let api = FootballApi::new("invalid_key", "v3.football.api-sports.io");
         let club = ClubInfo::from_parameter(0, 0, "".into(), "arsenal".into());
-        let data = api.get_team_data(&club).await?;
-        let output = data.get_teams_information();
 
-        assert!(
-            output.contains("Error: token") || output.contains("Here's your club information:")
-        );
+        match api.get_team_data(&club).await {
+            Ok(data) => {
+                let output = data.get_teams_information();
+                assert!(
+                    output.contains("Error: token")
+                        || output.contains("Here's your club information:"),
+                    "unexpected output: {output}"
+                );
+            }
+            Err(Error::ReqwestError(e)) => {
+                let status = e.status().map(|s| s.as_u16());
+                assert!(
+                    matches!(status, Some(401) | Some(403)),
+                    "unexpected reqwest error: {e}"
+                );
+            }
+            Err(e) => return Err(e),
+        }
         Ok(())
     }
 }

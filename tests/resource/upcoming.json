@@ -1,0 +1,66 @@
+{
+  "count": 3,
+  "updated_at": "2026-05-10T02:53:21Z",
+  "results": [
+    {
+      "league_id": 297,
+      "league_name": "La Liga",
+      "is_cup": false,
+      "country": { "id": 60, "name": "spain" },
+      "match_previews": [
+        {
+          "id": 962063,
+          "date": "10/05/2026",
+          "time": "19:00",
+          "word_count": 714,
+          "excitement_rating": 9.05,
+          "teams": {
+            "home": { "id": 4884, "name": "Barcelona" },
+            "away": { "id": 4883, "name": "Real Madrid" }
+          }
+        },
+        {
+          "id": 962070,
+          "date": "13/05/2026",
+          "time": "19:30",
+          "word_count": 701,
+          "excitement_rating": 7.14,
+          "teams": {
+            "home": { "id": 4892, "name": "Alaves" },
+            "away": { "id": 4884, "name": "Barcelona" }
+          }
+        },
+        {
+          "id": 961237,
+          "date": "13/05/2026",
+          "time": "17:00",
+          "word_count": 697,
+          "excitement_rating": 7.06,
+          "teams": {
+            "home": { "id": 18798, "name": "None" },
+            "away": { "id": 18798, "name": "None" }
+          }
+        }
+      ]
+    },
+    {
+      "league_id": 39,
+      "league_name": "Premier League",
+      "is_cup": false,
+      "country": { "id": 1, "name": "england" },
+      "match_previews": [
+        {
+          "id": 970001,
+          "date": "11/05/2026",
+          "time": "15:00",
+          "word_count": 680,
+          "excitement_rating": 6.50,
+          "teams": {
+            "home": { "id": 42, "name": "Arsenal" },
+            "away": { "id": 33, "name": "Manchester United" }
+          }
+        }
+      ]
+    }
+  ]
+}

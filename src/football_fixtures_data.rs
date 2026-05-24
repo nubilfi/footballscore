@@ -344,55 +344,40 @@ impl FootballFixturesData {
 
 #[cfg(test)]
 mod tests {
+    use log::info;
+
     use crate::{
         football_fixtures_data::{FootballErrors, FootballFixturesData, Paging, Parameters},
         Error,
     };
-    use log::info;
 
     #[test]
     fn test_football_data() -> Result<(), Error> {
         let buf = include_str!("../tests/resource/fixtures.json");
         let data: FootballFixturesData = serde_json::from_str(buf)?;
-
         let buf = data.get_current_fixtures();
 
-        assert!(buf.starts_with("Match: Barcelona 0 vs 1 Arsenal"));
+        assert!(
+            buf.starts_with("Match: Barcelona 0 vs 1 Arsenal"),
+            "unexpected output: {buf}"
+        );
 
         if let Some(response) = data.response.first() {
             let (home_goals, away_goals) = data.get_goals();
             let home_team_name = &response.teams.home.name;
             let away_team_name = &response.teams.away.name;
 
-            if let Some(home_score) = home_goals.first().copied() {
-                if let Some(away_score) = away_goals.first().copied() {
-                    info!(
-                        "{}: {} {:?} vs {} {:?}",
-                        buf.len(),
-                        home_team_name,
-                        home_score.unwrap_or_default(),
-                        away_team_name,
-                        away_score.unwrap_or_default()
-                    );
-                } else {
-                    info!(
-                        "{}: {} {:?} vs {}",
-                        buf.len(),
-                        home_team_name,
-                        home_score.unwrap_or_default(),
-                        away_team_name
-                    );
-                }
-            } else if let Some(away_score) = away_goals.first().copied() {
+            if let (Some(home_score), Some(away_score)) =
+                (home_goals.first().copied(), away_goals.first().copied())
+            {
                 info!(
-                    "{}: {} vs {} {:?}",
+                    "{}: {} {:?} vs {:?} {}",
                     buf.len(),
                     home_team_name,
+                    home_score.unwrap_or_default(),
+                    away_score.unwrap_or_default(),
                     away_team_name,
-                    away_score.unwrap_or_default()
                 );
-            } else {
-                info!("{}: {} vs {}", buf.len(), home_team_name, away_team_name);
             }
         }
 
@@ -403,40 +388,26 @@ mod tests {
     fn test_default_football_data() -> Result<(), Error> {
         let default_data = FootballFixturesData::default();
 
-        assert_eq!(
-            default_data.get,
-            "".to_string(),
-            "Expected default get value"
-        );
-
-        assert_eq!(
-            default_data.parameters,
-            Parameters::default(),
-            "Expected default parameters"
-        );
+        assert_eq!(default_data.get, "");
+        assert_eq!(default_data.parameters, Parameters::default());
 
         if let FootballErrors::Empty(empty_errors) = &default_data.errors {
-            assert!(
-                empty_errors.is_empty(),
-                "Expected no errors in default data"
-            );
+            assert!(empty_errors.is_empty());
         } else {
-            panic!("Unexpected non-empty errors variant in default data");
+            panic!("expected Empty errors variant");
         }
 
-        assert_eq!(default_data.results, 0, "Expected default results value");
-
-        assert_eq!(
-            default_data.paging,
-            Paging::default(),
-            "Expected default paging"
-        );
-
-        assert!(
-            default_data.response.is_empty(),
-            "Expected no response data in default"
-        );
+        assert_eq!(default_data.results, 0);
+        assert_eq!(default_data.paging, Paging::default());
+        assert!(default_data.response.is_empty());
 
         Ok(())
+    }
+
+    #[test]
+    fn test_get_current_fixtures_no_response() {
+        let data = FootballFixturesData::default();
+        let output = data.get_current_fixtures();
+        assert!(output.contains("no live event"), "unexpected: {output}");
     }
 }

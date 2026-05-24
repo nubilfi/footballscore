@@ -17,12 +17,8 @@ async fn main() -> Result<(), Error> {
         }
         Err(Error::ReqwestError(req_err)) => {
             match req_err.url() {
-                Some(_) => {
-                    eprintln!("Network Request Error");
-                }
-                None => {
-                    eprintln!("Invalid API Request");
-                }
+                Some(_) => eprintln!("Network Request Error"),
+                None => eprintln!("Invalid API Request"),
             }
             Ok(())
         }

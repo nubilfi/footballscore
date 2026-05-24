@@ -1,0 +1,32 @@
+{
+  "id": 962063,
+  "date": "10/05/2026",
+  "time": "19:00",
+  "country": { "id": 60, "name": "spain" },
+  "league": { "id": 297, "name": "La Liga" },
+  "stage": { "id": 13947, "name": "LaLiga", "is_active": true },
+  "teams": {
+    "home": { "id": 4884, "name": "Barcelona" },
+    "away": { "id": 4883, "name": "Real Madrid" }
+  },
+  "stadium": null,
+  "status": "live",
+  "minute": 67,
+  "winner": "tbd",
+  "has_extra_time": false,
+  "has_penalties": false,
+  "goals": {
+    "home_ht_goals": 1,
+    "away_ht_goals": 0,
+    "home_ft_goals": 2,
+    "away_ft_goals": 1,
+    "home_et_goals": -1,
+    "away_et_goals": -1,
+    "home_pen_goals": -1,
+    "away_pen_goals": -1
+  },
+  "events": [],
+  "odds": {},
+  "lineups": {},
+  "match_preview": { "has_preview": true, "word_count": 714, "excitement_rating": 9.05 }
+}

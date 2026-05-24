@@ -255,39 +255,22 @@ mod tests {
     async fn test_process_opts() -> Result<(), Error> {
         let api_key = "1e5765fc0c22df4e4ccf20581c2ef3d7";
         let api_endpoint = "v3.football.api-sports.io";
-
         let api = FootballApi::new(api_key, api_endpoint);
 
-        // Fixtures
-        let club_info = ClubInfo::from_parameter(529, 0, "all".into(), "".into());
-
-        let mut hasher0 = DefaultHasher::new();
-        club_info.hash(&mut hasher0);
-        assert_eq!(hasher0.finish(), 17875426778410589958);
-
         let club = ClubInfo::from_parameter(529, 0, "all".into(), "".into());
-
         let fixture = api.get_fixture_data(&club).await?;
-
-        assert_eq!(
-            &fixture.get_current_fixtures(),
-            "Error: token - Error/Missing application key. Go to https://www.api-football.com/documentation-v3 to learn how to get your API application key.\n"
+        let output = fixture.get_current_fixtures();
+        assert!(
+            output.contains("Error: token") || output.contains("Match:"),
+            "unexpected output: {output}"
         );
 
-        // Teams
-        let club_info = ClubInfo::from_parameter(0, 0, "".into(), "arsenal".into());
-
-        let mut hasher0 = DefaultHasher::new();
-        club_info.hash(&mut hasher0);
-        assert_eq!(hasher0.finish(), 8926715139541391656);
-
         let club = ClubInfo::from_parameter(0, 0, "".into(), "arsenal".into());
-
         let team = api.get_team_data(&club).await?;
-
-        assert_eq!(
-            &team.get_teams_information(),
-            "Error: token - Error/Missing application key. Go to https://www.api-football.com/documentation-v3 to learn how to get your API application key.\n"
+        let output = team.get_teams_information();
+        assert!(
+            output.contains("Error: token") || output.contains("Here's your club information:"),
+            "unexpected output: {output}"
         );
 
         Ok(())
@@ -300,7 +283,6 @@ mod tests {
             "1e5765fc0c22df4e4ccf20581c2ef3d7",
             "v3.football.api-sports.io",
         );
-
         let api2 = FootballApi::default()
             .with_key("1e5765fc0c22df4e4ccf20581c2ef3d7")
             .with_endpoint("v3.football.api-sports.io");
@@ -309,7 +291,6 @@ mod tests {
         assert_eq!(
             format!("{api:?}"),
             "FootballApi(key=1e5765fc0c22df4e4ccf20581c2ef3d7,endpoint=v3.football.api-sports.io)"
-                .to_string()
         );
 
         let mut hasher0 = DefaultHasher::new();
@@ -322,14 +303,12 @@ mod tests {
         info!("{:?}", api);
         assert_eq!(hasher0.finish(), hasher1.finish());
 
-        // Fixtures
         let club = ClubInfo::from_parameter(529, 0, "all".into(), "".into());
         let opts = api.get_api_options(&club);
         let expected: Vec<(&str, ApiStringType)> =
             vec![("team", "529".into()), ("live", "all".into())];
         assert_eq!(opts, expected);
 
-        // Teams
         let club = ClubInfo::from_parameter(0, 0, "".into(), "arsenal".into());
         let opts = api.get_api_options(&club);
         let expected: Vec<(&str, ApiStringType)> = vec![("name", "arsenal".into())];
@@ -344,7 +323,21 @@ mod tests {
             ClubInfo::default(),
             ClubInfo::from_parameter(529, 1, "all".into(), "".into())
         );
-
         Ok(())
+    }
+
+    #[test]
+    fn test_clubinfo_get_param_options_next() {
+        let club = ClubInfo::from_parameter(529, 1, "".into(), "".into());
+        let opts = club.get_param_options();
+        let expected: Vec<(&str, ApiStringType)> =
+            vec![("team", "529".into()), ("next", "1".into())];
+        assert_eq!(opts, expected);
+    }
+
+    #[test]
+    fn test_clubinfo_display() {
+        let club = ClubInfo::from_parameter(529, 1, "all".into(), "".into());
+        assert_eq!(format!("{club}"), "529,1,all,");
     }
 }

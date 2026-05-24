@@ -5,26 +5,27 @@
 [![Documentation](https://docs.rs/footballscore/badge.svg)](https://docs.rs/footballscore/latest/footballscore/)
 [![codecov](https://codecov.io/gh/nubilfi/footballscore/graph/badge.svg?token=SRGOFSB31Q)](https://codecov.io/gh/nubilfi/footballscore)
 
-a CLI tool to retreive football score from api-football.com. You will need to obtain an `API_KEY` by signing up at dashboard.api-football.com.
+a CLI tool to retrieve football scores and fixtures.
+
+Uses [api-football.com](https://api-football.com) (paid) for live scores and next fixtures, and [api.soccerdataapi.com](https://api.soccerdataapi.com) (free) for upcoming fixtures.
 
 Usage:
 
 ```bash
 footballscore
-Utility to retreive football score of your favorite team from api-football.com
+Retreive football score and fixture of your favorite team
 
 USAGE:
-    footballscore [OPTIONS]
+    footballscore [COMMAND]
 
-FLAGS:
-    -h, --help      Prints help information
-    -V, --version   Prints version information
+Commands (paid - api-football.com):
+  live      Retrieve live score for a club
+  next      Show next fixture for a club
+  team      Look up a club ID by name
 
-OPTIONS:
-    -k, --api-key <api-key>             Api key (optional but either this or API_KEY environment variable must exist)
-        --next-match <next-match>       Show next match (optional), but it must be `1`
-    -n, --club-name <club-name>         Get your favorite Club ID by name (optional)
-    -c, --club-id <club-id>             Your favorite Club ID (optional), if not specified `529 (Barcelona)` will be assumed
+Commands (free - api.soccerdataapi.com):
+  upcoming  Show upcoming fixture with live score
+  find      Search for a team ID by name
 ```
 
 Output:
@@ -33,10 +34,24 @@ Output:
 Match: Barcelona 0 vs 0 Girona
 ```
 
-To retrieve _live score_ data, you only need to use `--club-id` option. For example:
+To retrieve _live score_ data, you only need to use `live` command:
 
 ```bash
-footballscore -k=api_key_value -c=club_id_value
+# live score
+footballscore live -k=api_key_value -c=club_id_value
+```
+
+More example:
+
+```bash
+# next fixture
+footballscore next -k=api_key_value -c=club_id_value
+
+# look up a club ID
+footballscore team -k=api_key_value -n="barcelona"
+
+# upcoming fixture with live score
+footballscore upcoming -t=auth_token_value --team-id=4884
 ```
 
 Want to stay updated regularly? Set up an `interval` for specific durations on your panel item.
@@ -46,6 +61,18 @@ Want to stay updated regularly? Set up an `interval` for specific durations on y
 Or, you might want to use it on `i3wm + Polybar + dunstify` or something similar, here's an example of mine.
 
 ![image](https://github.com/nubilfi/footballscore/blob/main/i3wm/footballscore-i3wm.png "image")
+
+## Config file
+
+Credentials and endpoints can be set in `~/.config/footballscore/config.env`
+so you don't need to pass them on every invocation:
+
+```env
+API_KEY=xxxxx
+API_ENDPOINT=v3.football.api-sports.io
+SOCCER_ENDPOINT=api.soccerdataapi.com
+AUTH_TOKEN=xxxxx
+```
 
 ## Development
 

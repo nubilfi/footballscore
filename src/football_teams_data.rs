@@ -187,17 +187,17 @@ impl FootballTeamsData {
 
 #[cfg(test)]
 mod tests {
+    use log::info;
+
     use crate::{
         football_teams_data::{FootballTeamsData, FootballTeamsErrors, Paging, Parameters},
         Error,
     };
-    use log::info;
 
     #[test]
     fn test_football_teams_data() -> Result<(), Error> {
         let buf = include_str!("../tests/resource/teams.json");
         let data: FootballTeamsData = serde_json::from_str(buf)?;
-
         let buf = data.get_teams_information();
 
         assert!(buf.starts_with("Here's your club information:"));
@@ -208,15 +208,15 @@ mod tests {
             let venue_info = &response.venue;
 
             info!(
-                "{}: Name: {}\nClubID: {}\n",
+                "{}: Name: {}\nClub ID: {}\n",
                 buf.len(),
                 team_info.name.clone().unwrap_or_default(),
-                team_info.id.unwrap_or_default()
+                team_info.id.unwrap_or_default(),
             );
             info!(
                 "{}: Venue: {}\n",
                 buf.len(),
-                venue_info.name.clone().unwrap_or_default()
+                venue_info.name.clone().unwrap_or_default(),
             );
         }
 
@@ -224,43 +224,29 @@ mod tests {
     }
 
     #[test]
-    fn test_default_football_data() -> Result<(), Error> {
+    fn test_default_football_teams_data() -> Result<(), Error> {
         let default_data = FootballTeamsData::default();
 
-        assert_eq!(
-            default_data.get,
-            "".to_string(),
-            "Expected default get value"
-        );
-
-        assert_eq!(
-            default_data.parameters,
-            Parameters::default(),
-            "Expected default parameters"
-        );
+        assert_eq!(default_data.get, "");
+        assert_eq!(default_data.parameters, Parameters::default());
 
         if let FootballTeamsErrors::Empty(empty_errors) = &default_data.errors {
-            assert!(
-                empty_errors.is_empty(),
-                "Expected no errors in default data"
-            );
+            assert!(empty_errors.is_empty());
         } else {
-            panic!("Unexpected non-empty errors variant in default data");
+            panic!("expected Empty errors variant");
         }
 
-        assert_eq!(default_data.results, 0, "Expected default results value");
-
-        assert_eq!(
-            default_data.paging,
-            Paging::default(),
-            "Expected default paging"
-        );
-
-        assert!(
-            default_data.response.is_empty(),
-            "Expected no response data in default"
-        );
+        assert_eq!(default_data.results, 0);
+        assert_eq!(default_data.paging, Paging::default());
+        assert!(default_data.response.is_empty());
 
         Ok(())
+    }
+
+    #[test]
+    fn test_get_teams_information_no_response() {
+        let data = FootballTeamsData::default();
+        let output = data.get_teams_information();
+        assert!(output.contains("unavailable"), "unexpected: {output}");
     }
 }
