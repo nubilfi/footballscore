@@ -1,7 +1,7 @@
 use crate::{format_string, Error};
 
 #[cfg(feature = "cli")]
-use chrono::Local;
+use chrono::Utc;
 
 #[cfg(feature = "cli")]
 use clap::{CommandFactory, Parser, Subcommand};
@@ -18,12 +18,12 @@ use crate::{config::Config, ApiStringType, StringType};
 use crate::football_api::{ClubInfo, FootballApi};
 
 #[cfg(feature = "cli")]
-use crate::soccer_api::SoccerApi;
+use crate::football_data::{debug_enabled, FootballDataApi, TeamsResponse};
 
 /// Retrieve football scores and fixtures
 ///
 /// Uses api-football.com (paid) for live scores and next fixtures
-/// and api.soccerdataapi.com (free) for upcoming fixtures
+/// and football-data.org (free) for upcoming fixtures
 #[cfg(feature = "cli")]
 #[derive(Parser)]
 #[command(name = "footballscore", version, about, long_about = None)]
@@ -49,6 +49,9 @@ enum FootballCommand {
 
     /// Search for a team ID by name
     Find(FindOpts),
+
+    /// List league IDs
+    Leagues(LeaguesOpts),
 }
 
 /// Retrieve live score for a club (api-football.com)
@@ -90,30 +93,56 @@ struct TeamOpts {
     name: StringType,
 }
 
-/// Show upcoming fixture with live score (api.soccerdataapi.com)
+/// Show upcoming fixture with live score (football-data.org)
 #[cfg(feature = "cli")]
 #[derive(Parser)]
 struct UpcomingOpts {
-    /// Auth token (or set AUTH_TOKEN in config)
+    /// Auth token (or set FOOTBALL_DATA_TOKEN in config)
     #[clap(short = 't', long)]
     token: Option<ApiStringType>,
 
-    /// Team ID from api.soccerdataapi.com.
-    /// Use `footballscore find <name>` to look up the correct ID.
+    /// Team ID from football-data.org
+    /// Use `footballscore find <name> -l <league-id>` to look up the correct ID
     #[clap(long)]
     team_id: u32,
+
+    /// Season e.g. 2026 (or set SEASON in config)
+    /// Defaults to the season the API has current
+    #[clap(short = 's', long)]
+    season: Option<StringType>,
 }
 
-/// Search for a team ID by name (api.soccerdataapi.com)
+/// Search for a team ID by name (football-data.org)
 #[cfg(feature = "cli")]
 #[derive(Parser)]
 struct FindOpts {
-    /// Auth token (or set AUTH_TOKEN in config)
+    /// Auth token (or set FOOTBALL_DATA_TOKEN in config)
     #[clap(short = 't', long)]
     token: Option<ApiStringType>,
 
     /// Team name to search (case-insensitive substring match)
     name: StringType,
+
+    /// League ID to search within (or set LEAGUE_ID in config)
+    /// Use `footballscore leagues` to look up the correct ID
+    #[clap(short = 'l', long)]
+    league_id: Option<u32>,
+
+    /// Season e.g. 2026-2027 (or set SEASON in config)
+    #[clap(short = 's', long)]
+    season: Option<StringType>,
+}
+
+/// List league IDs (football-data.org)
+#[cfg(feature = "cli")]
+#[derive(Parser)]
+struct LeaguesOpts {
+    /// Auth token (or set FOOTBALL_DATA_TOKEN in config)
+    #[clap(short = 't', long)]
+    token: Option<ApiStringType>,
+
+    /// Filter by league or country name (case-insensitive substring match)
+    name: Option<StringType>,
 }
 
 #[cfg(feature = "cli")]
@@ -140,6 +169,7 @@ impl FootballOpts {
             FootballCommand::Team(opts) => run_team(opts, config).await,
             FootballCommand::Upcoming(opts) => run_upcoming(opts, config).await,
             FootballCommand::Find(opts) => run_find(opts, config).await,
+            FootballCommand::Leagues(opts) => run_leagues(opts, config).await,
         }
     }
 
@@ -163,18 +193,21 @@ fn build_football_api(cli_key: Option<&str>, config: &Config) -> Result<Football
     Ok(FootballApi::new(api_key, &config.api_endpoint))
 }
 
-/// Build a `SoccerApi` client, preferring the CLI token over the config value
+/// Build a `FootballDataApi` client
 #[cfg(feature = "cli")]
-fn build_soccer_api(cli_token: Option<&str>, config: &Config) -> Result<SoccerApi, Error> {
-    let auth_token = cli_token
-        .or_else(|| config.auth_token.as_deref())
+fn build_football_data_api(
+    cli_token: Option<&str>,
+    config: &Config,
+) -> Result<FootballDataApi, Error> {
+    let token = cli_token
+        .or_else(|| config.football_data_token.as_deref())
         .ok_or_else(|| {
             Error::InvalidInputError(format_string!(
-                "auth token required: use -t <token> or set AUTH_TOKEN in config"
+                "token required: use -t <token> or set FOOTBALL_DATA_TOKEN in config"
             ))
         })?;
 
-    Ok(SoccerApi::new(auth_token, &config.soccer_endpoint))
+    Ok(FootballDataApi::new(token, &config.football_data_endpoint))
 }
 
 #[cfg(feature = "cli")]
@@ -205,39 +238,157 @@ async fn run_team(opts: &TeamOpts, config: &Config) -> Result<Vec<StringType>, E
     Ok(vec![data.get_teams_information()])
 }
 
+/// Resolve the league to query
+///
+/// `find` lists teams per competition, so it cannot run without one
+#[cfg(feature = "cli")]
+fn resolve_league_id(cli_league_id: Option<u32>, config: &Config) -> Result<u32, Error> {
+    cli_league_id.or(config.league_id).ok_or_else(|| {
+        Error::InvalidInputError(format_string!(
+            "league id required: use -l <id> or set LEAGUE_ID in config, list ids with \
+             `footballscore leagues <country>`"
+        ))
+    })
+}
+
+/// Degrade an unreadable payload to its default (usually an empty list) instead
+/// of surfacing a parse error
+///
+/// The provider reshapes responses without notice, when that happens the caller
+/// should print its own "nothing found" text rather than a parse error, run with
+/// `FOOTBALLSCORE_DEBUG` set to see what actually came back
+#[cfg(feature = "cli")]
+fn fetch_or_default<T: Default>(result: Result<T, Error>, what: &str) -> Result<T, Error> {
+    match result {
+        Err(Error::SerdeJsonError(e)) => {
+            if debug_enabled() {
+                eprintln!("[debug] could not read the {what} response: {e}");
+            }
+
+            Ok(T::default())
+        }
+        other => other,
+    }
+}
+
+/// The league to name in user-facing text,the name the API reports when it
+/// is known the numeric id otherwise
+#[cfg(feature = "cli")]
+fn league_label(teams: &TeamsResponse, league_id: u32) -> StringType {
+    if teams.competition_name.is_empty() {
+        format_string!("{league_id}")
+    } else {
+        teams.competition_name.clone()
+    }
+}
+
 #[cfg(feature = "cli")]
 async fn run_upcoming(opts: &UpcomingOpts, config: &Config) -> Result<Vec<StringType>, Error> {
-    let soccer_api = build_soccer_api(opts.token.as_deref(), config)?;
-    let today = Local::now().date_naive();
+    let api = build_football_data_api(opts.token.as_deref(), config)?;
+    let season = opts
+        .season
+        .as_ref()
+        .or(config.season.as_ref())
+        .map(StringType::as_str);
 
-    // find the next fixture for this team in the upcoming list
-    let upcoming_list = soccer_api.get_upcoming_fixtures().await?;
-    let preview = upcoming_list.find_next_for_team(opts.team_id, today);
+    // kickoffs are UTC so filter against the UTC date
+    let today = Utc::now().date_naive();
 
-    let match_id = match preview {
-        Some(p) => p.id,
-        None => return Ok(vec![format_string!("Match: no match event\n")]),
+    // the fixture list carries status, minute and score, so one request
+    // answers both "what is next" and "what is the score"
+    let matches = fetch_or_default(
+        api.get_team_matches(opts.team_id, season).await,
+        "/teams/{id}/matches",
+    )?;
+
+    let Some(next) = matches.next_match(today) else {
+        return Ok(vec![format_string!(
+            "Match: no match event\n\tNo fixture for team {}. Check the team ID with \
+             `footballscore find <name> -l <league-id>`.\n",
+            opts.team_id
+        )]);
     };
 
-    // fetch full match detail for the live score
-    let data = soccer_api.get_match_detail(match_id).await?;
-    Ok(vec![data.get_current_fixtures()])
+    Ok(vec![next.get_current_fixtures()])
 }
 
 #[cfg(feature = "cli")]
 async fn run_find(opts: &FindOpts, config: &Config) -> Result<Vec<StringType>, Error> {
-    let soccer_api = build_soccer_api(opts.token.as_deref(), config)?;
-    let upcoming = soccer_api.get_upcoming_fixtures().await?;
-    let matches = upcoming.search_teams(&opts.name);
+    let api = build_football_data_api(opts.token.as_deref(), config)?;
+    let league_id = resolve_league_id(opts.league_id, config)?;
+    let season = opts
+        .season
+        .as_ref()
+        .or(config.season.as_ref())
+        .map(StringType::as_str);
+
+    let teams = fetch_or_default(
+        api.get_teams(league_id, season).await,
+        "/competitions/{id}/teams",
+    )?;
+    let found = teams.search_teams(&opts.name);
 
     let mut output = StringType::new();
-    if matches.is_empty() {
-        let _ = write!(output, "No teams found matching \"{}\"\n", opts.name);
+    if found.is_empty() {
+        let _ = writeln!(
+            output,
+            "No teams found matching \"{}\" in {}",
+            opts.name,
+            league_label(&teams, league_id)
+        );
     } else {
-        let _ = write!(output, "Teams matching \"{}\":\n", opts.name);
-        for (id, name) in &matches {
-            let _ = write!(output, "  {id}\t{name}\n");
+        let _ = writeln!(output, "Teams matching \"{}\":", opts.name);
+        for (id, name) in &found {
+            let _ = writeln!(output, "  {id}\t{name}");
         }
+    }
+
+    Ok(vec![output])
+}
+
+#[cfg(feature = "cli")]
+async fn run_leagues(opts: &LeaguesOpts, config: &Config) -> Result<Vec<StringType>, Error> {
+    let api = build_football_data_api(opts.token.as_deref(), config)?;
+    let competitions = fetch_or_default(api.get_competitions().await, "/competitions")?;
+    let needle = opts.name.as_ref().map(|n| n.to_lowercase());
+
+    let mut output = StringType::new();
+    let mut found = 0_usize;
+
+    for competition in &competitions.competitions {
+        let country = competition
+            .area
+            .as_ref()
+            .map_or("", |area| area.name.as_str());
+
+        // match on either half so `leagues england` and `leagues premier` both work
+        if let Some(needle) = &needle {
+            if !competition.name.to_lowercase().contains(needle.as_str())
+                && !country.to_lowercase().contains(needle.as_str())
+            {
+                continue;
+            }
+        }
+
+        let _ = writeln!(
+            output,
+            "  {}\t{}\t{country}",
+            competition.id, competition.name
+        );
+        found += 1;
+    }
+
+    if found == 0 {
+        let mut empty = StringType::new();
+        match &opts.name {
+            Some(name) => {
+                let _ = writeln!(empty, "No leagues found matching \"{name}\"");
+            }
+            None => {
+                let _ = writeln!(empty, "No leagues returned");
+            }
+        }
+        return Ok(vec![empty]);
     }
 
     Ok(vec![output])
@@ -362,7 +513,7 @@ mod tests {
 
     #[test]
     fn test_config_defaults() -> Result<(), Error> {
-        let _env = TestEnvs::new(&["API_KEY", "API_ENDPOINT", "CLUB_ID", "AUTH_TOKEN"]);
+        let _env = TestEnvs::new(&["API_KEY", "API_ENDPOINT", "CLUB_ID", "FOOTBALL_DATA_TOKEN"]);
 
         set_var("API_KEY", "defaultkey");
         set_var("API_ENDPOINT", "v3.football.api-sports.io");
@@ -375,7 +526,7 @@ mod tests {
 
         assert_eq!(config.club_id, 529);
         assert_eq!(config.api_key.as_deref(), Some("defaultkey"));
-        assert!(config.auth_token.is_none());
+        assert!(config.football_data_token.is_none());
         Ok(())
     }
 

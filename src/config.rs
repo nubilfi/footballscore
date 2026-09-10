@@ -25,12 +25,23 @@ pub struct ConfigInner {
     #[serde(default = "default_club_id")]
     pub club_id: u16,
 
-    /// api.soccerdataapi.com endpoint (optional)
-    #[serde(default = "default_soccer_endpoint")]
-    pub soccer_endpoint: StringType,
+    /// football-data.org API token (optional)
+    pub football_data_token: Option<ApiStringType>,
 
-    /// api.soccerdataapi.com auth token (optional)
-    pub auth_token: Option<ApiStringType>,
+    /// football-data.org API endpoint
+    #[serde(default = "default_football_data_endpoint")]
+    pub football_data_endpoint: StringType,
+
+    /// football-data.org competition id e.g. `2021` (Premier League)
+    ///
+    /// `find` lists teams per competition, so it needs one
+    /// List the ids with `footballscore leagues`
+    pub league_id: Option<u32>,
+
+    /// football-data.org season filter e.g. `2026` (optional)
+    ///
+    /// The API serves the current season when this is unset
+    pub season: Option<StringType>,
 }
 
 fn default_api_endpoint() -> StringType {
@@ -41,8 +52,8 @@ fn default_club_id() -> u16 {
     529
 }
 
-fn default_soccer_endpoint() -> StringType {
-    "api.soccerdataapi.com".into()
+fn default_football_data_endpoint() -> StringType {
+    "api.football-data.org/v4".into()
 }
 
 /// Configuration struct
@@ -90,9 +101,9 @@ impl Config {
     ///
     /// Will return Error if unable to deserialize env variables
     pub fn init_config(config_path: Option<&Path>) -> Result<Self, Error> {
-        let fname = config_path.unwrap_or_else(|| Path::new("config.env"));
+        let fname = config_path.unwrap_or_else(|| Path::new("config"));
         let config_dir = dirs::config_dir().unwrap_or_else(|| "./".into());
-        let default_fname = config_dir.join("footballscore").join("config.env");
+        let default_fname = config_dir.join("footballscore").join("config");
 
         let env_file = if fname.exists() {
             fname

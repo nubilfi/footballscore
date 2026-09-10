@@ -1,0 +1,37 @@
+{
+  "count": 3,
+  "competition": {
+    "id": 2021,
+    "name": "Premier League",
+    "code": "PL",
+    "type": "LEAGUE",
+    "emblem": "https://crests.football-data.org/PL.png"
+  },
+  "season": {
+    "id": 2502,
+    "startDate": "2026-08-21",
+    "endDate": "2027-05-30",
+    "currentMatchday": 4,
+    "winner": null
+  },
+  "teams": [
+    {
+      "id": 57,
+      "name": "Arsenal FC",
+      "shortName": "Arsenal",
+      "tla": "ARS"
+    },
+    {
+      "id": 64,
+      "name": "Liverpool FC",
+      "shortName": "Liverpool",
+      "tla": "LIV"
+    },
+    {
+      "id": 65,
+      "name": "Manchester City FC",
+      "shortName": "Man City",
+      "tla": "MCI"
+    }
+  ]
+}

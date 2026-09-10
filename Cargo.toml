@@ -1,6 +1,6 @@
 [package]
 name = "footballscore"
-version = "0.3.6"
+version = "0.4.6"
 edition = "2021"
 license-file = "LICENSE"
 description = "a CLI tool to retrieve football scores and fixtures"
@@ -22,14 +22,14 @@ exclude = [
 
 [dependencies]
 clap = { version = "4.4.8", features = ["derive"], optional = true }
-dirs = "6.0.0"
+dirs = "7.0.0"
 dotenvy = "0.15.7"
 envy = "0.4.2"
 log = "0.4.20"
 parking_lot = "0.12.1"
-reqwest = { version = "0.12.5", features = [
+reqwest = { version = "0.13.5", features = [
   "json",
-  "rustls-tls",
+  "rustls",
   "gzip",
 ], default-features = false, optional = true }
 serde = { version = "1.0.193", features = ["derive"] }
@@ -44,7 +44,7 @@ chrono = { version = "0.4.40", default-features = false, features = ["clock", "s
 [dev-dependencies]
 anyhow = "1.0.75"
 assert_cmd = "2.0.12"
-criterion = { version = "0.5.1", features = ["html_reports"] }
+criterion = { version = "0.8.2", features = ["html_reports"] }
 tempfile = "3.8.1"
 
 [features]

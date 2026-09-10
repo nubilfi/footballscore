@@ -47,6 +47,11 @@ pub enum Error {
     #[error("Reqwest Error {0}")]
     ReqwestError(#[from] ReqwestError),
 
+    /// Non-2xx response with its status and the API's own message
+    #[cfg(feature = "cli")]
+    #[error("API Error {status}: {message}")]
+    ApiError { status: u16, message: StringType },
+
     #[cfg(feature = "cli")]
     #[error("Invalid Header Value {0}")]
     InvalidHeaderValue(#[from] InvalidHeaderValue),
